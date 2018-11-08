@@ -38,9 +38,11 @@ class Organism():
 		''' The gene dictionary and the following block control traits of the organism. '''
 		self.gene_dict = gene_dict
 		self.gene_dict["inverse_colour"] = (255 - self.gene_dict["colour"][0], 255 - self.gene_dict["colour"][1], 255 - self.gene_dict["colour"][2])
-		self.max_energy = gene_dict["size"]*125
+		self.gene_dict["point_count"] = max(self.gene_dict["point_count"], 3)
+		self.gene_dict["size"] = max(10, self.gene_dict["size"])
+		self.max_energy = gene_dict["size"]*250
 		self.max_fitness = gene_dict["size"]*25*gene_dict["point_count"] # Give an incentive to evolve more points
-		self.max_lifespan = 1000 + randint(-200, 200)
+		self.max_lifespan = 30*self.gene_dict["size"] + 500
 		self.generation = generation
 		
 		self.current_energy = self.max_energy
@@ -76,6 +78,8 @@ class Organism():
 
 		self.aggression = False
 		self.mating = False
+		self.reproduction_wait_period = Constants.REPRODUCTION_WAIT_PERIOD
+		self.time_left_before_mating = self.reproduction_wait_period
 
 	def update(self):
 		
@@ -131,6 +135,10 @@ class Organism():
 		self.current_lifespan -= 1
 		if self.current_lifespan < 0:
 			self.die()
+
+		self.time_left_before_mating -= 1
+		if self.time_left_before_mating < 0:
+			self.time_left_before_mating = 0
 
 		self.current_energy -= self.gene_dict["point_count"]//2 # It should take more energy to maintain more points
 		self.current_energy -= self.gene_dict["size"]//2 # Being larger should cost more absolute energy
@@ -190,17 +198,18 @@ class Organism():
 		self.rotational_acceleration = self.output_2
 		self.mood = self.output_3
 
-		if self.mood >= -1 and self.mood <= -0.9:
+		if self.mood >= -1 and self.mood <= -0.8:
 			self.aggression = True
 			self.mating = False
 			
-		elif self.mood > -0.9 and self.mood < 0.9:
+		elif self.mood > -0.8 and self.mood < 0.8:
 			self.aggression = False
 			self.mating = False
 
-		elif self.mood >= 0.9 and self.mood <= 1:
+		elif self.mood >= 0.8 and self.mood <= 1:
 			self.aggression = False
-			self.mating = True
+			if not self.time_left_before_mating:
+				self.mating = True
 
 	def draw(self, surface):
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)
@@ -329,6 +338,12 @@ class Organism():
 		else:
 			return "Neutral"
 
+	def get_time_left_before_mating(self):
+		return self.time_left_before_mating
+
+	def get_reproduction_wait_period(self):
+		return self.reproduction_wait_period
+
 	def shift_fitness(self, v):
 		self.current_fitness += v
 
@@ -337,3 +352,6 @@ class Organism():
 
 	def set_mating(self, new_mating):
 		self.mating = new_mating
+
+	def set_time_left_before_mating(self, v):
+		self.time_left_before_mating = v

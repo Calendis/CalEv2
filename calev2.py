@@ -271,11 +271,11 @@ class Game():
 											average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
 
 											average_gene_dict = {"colour": tuple([(c1+c2)/2 for c1, c2 in zip(organism.get_colour(), other_organism.get_colour())]),
-											"point_count": (organism.get_point_count() + other_organism.get_point_count())//2,
-											"size": (organism.get_size() + other_organism.get_size())//2,
-											"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + random() - (1/2),
-											"input_weights": [(iw1+iw2)/2 + random() - (1/2) for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
-											"output_weights": [(ow1+ow2)/2 + random() - (1/2) for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
+											"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()*randint(-1, 1)+0.1),
+											"size": (organism.get_size() + other_organism.get_size())//2 + round(random()*randint(-1, 1)+0.1),
+											"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random() - (1/2))/4,
+											"input_weights": [(iw1+iw2)/2 + (random() - (1/2))/4 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
+											"output_weights": [(ow1+ow2)/2 + (random() - (1/2))/4 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
 
 											average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 
@@ -286,6 +286,9 @@ class Game():
 
 											organism.set_mating(False)
 											other_organism.set_mating(False)
+
+											organism.set_time_left_before_mating(organism.get_reproduction_wait_period())
+											other_organism.set_time_left_before_mating(other_organism.get_reproduction_wait_period())
 
 				# UI drawing
 				pygame.draw.rect(screen, (UI.UI_COLOUR), (screen_dimensions_without_hud[0], 0, screen_dimensions_without_hud[0], screen_dimensions[1]))
@@ -320,6 +323,20 @@ class Game():
 
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+8*UI.PADDING,
 						"Mood: "+self.target_organism.get_mood_name())
+
+					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
+						"Bias: "+str(self.target_organism.get_behaviour_bias()))
+
+					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+10*UI.PADDING,
+						"In-brain: "+str(self.target_organism.get_input_weights()))
+
+					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+11*UI.PADDING,
+						"Out-brain: "+str(self.target_organism.get_output_weights()))
+				else:
+					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 0+1*UI.PADDING, "Click an organism for more info...", UI.HEADER_TEXT_SIZE)
+
+				Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, screen_dimensions_without_hud[1]-8-2*UI.PADDING,
+					"Population: "+str(len(self.organisms))+"/"+str(Constants.POPULATION_LIMIT), UI.HEADER_TEXT_SIZE)
 
 				pygame.display.flip() #Updates display
 				clock.tick(60)
