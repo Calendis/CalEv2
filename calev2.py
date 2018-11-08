@@ -48,6 +48,17 @@ class Game():
 
 		self.target_organism = None
 
+		self.zone_size = 133
+		self.zone_rows = 6
+		self.zone_columns = 7
+		self.zones = []
+		self.zone_lists = []
+		for i in range(self.zone_columns):
+			for j in range(self.zone_rows):
+				self.zones.append((self.zone_size*i, self.zone_size*j, self.zone_size, self.zone_size))
+				self.zone_lists.append([])
+
+
 	def generate_random_organism(self):
 		return Organism.Organism(
 			[randint(0, screen_dimensions_without_hud[0]), # Random x position for organism
@@ -140,7 +151,7 @@ class Game():
 										#self.moisture_map = pass
 										#self.temperature_map = pass
 
-										for i in range(10):
+										for i in range(100):
 											self.organisms.append(self.generate_random_organism())
 
 										mainscreen_timestamp = time()
@@ -212,12 +223,23 @@ class Game():
 					button.update()
 					button.draw()
 
+				for zone_list in self.zone_lists:
+					zone_list.clear()
+
 				for organism in self.organisms:
 					if not organism.get_dead():
 						organism.update()
 						# The nested list comprehension provides a list of all other organisms that the current organism can see/interact with
-						organism.make_decision([o for o in self.organisms if o != organism and max([self.point_in_triangle(p, o.get_vision()) for p in organism.get_polygon()])])
+						#organism.make_decision([o for o in self.organisms if o != organism and max([self.point_in_triangle(p, o.get_vision()) for p in organism.get_polygon()])])
+						for zone in self.zones:
+							if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(zone)):
+								self.zone_lists[self.zones.index(zone)].append(organism)
+
 						organism.draw(screen)
+
+				for zone_list in self.zone_lists:
+					for organism in zone_list:
+						organism.make_decision([o for o in zone_list if o != organism and max([self.point_in_triangle(p, o.get_vision()) for p in organism.get_polygon()])])
 
 				# UI drawing
 				pygame.draw.rect(screen, (UI.UI_COLOUR), (screen_dimensions_without_hud[0], 0, screen_dimensions_without_hud[0], screen_dimensions[1]))
