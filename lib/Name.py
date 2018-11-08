@@ -27,7 +27,7 @@ name_1 = [
 "Holg",
 "Hunn",
 "Joll",
-"Mar"
+"Mar",
 "Pel",
 "Ple",
 "Qu",
