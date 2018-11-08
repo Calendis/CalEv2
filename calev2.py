@@ -18,6 +18,8 @@ from lib import Button
 from lib import Globals
 from lib import Environment
 from lib import Text
+from lib import Name
+from lib import Constants
 
 pygame.init()
 
@@ -70,11 +72,11 @@ class Game():
 				randint(0, 255)  # Random blue value
 				),
 			"point_count": randint(3, 10),
-			"size": randint(32, 33),
+			"size": randint(10, 32),
 			"behaviour_bias": random()*2-1,
 			"input_weights": [random()*2-1 for i in range(15)],
 			"output_weights": [random()*2-1 for i in range(3)]
-			}
+			}, 1, Name.generate_name()
 			)
 
 	def triangle_area(self, triangle):
@@ -151,7 +153,7 @@ class Game():
 										#self.moisture_map = pass
 										#self.temperature_map = pass
 
-										for i in range(300):
+										for i in range(Constants.STARTING_POPULATION):
 											self.organisms.append(self.generate_random_organism())
 
 										mainscreen_timestamp = time()
@@ -237,8 +239,53 @@ class Game():
 
 				for zone_list in self.zone_lists:
 					for organism in zone_list:
-						# The nested list comprehension provides a list of all other organisms that the current organism can see/interact with
-						organism.make_decision([o for o in zone_list if o != organism and max([self.point_in_triangle(p, o.get_vision()) for p in organism.get_polygon()])])
+						for other_organism in zone_list:
+							if organism != other_organism:
+								
+								if max([self.point_in_triangle(p, other_organism.get_vision()) for p in organism.get_polygon()]):
+									organism.make_decision([other_organism])
+
+								if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(other_organism.get_hitbox())):
+									if organism.get_aggression() or other_organism.get_aggression():
+										# Attack
+										if organism.get_aggression() and other_organism.get_aggression():
+											# Both organisms take damage and gain energy
+											organism.shift_fitness(-other_organism.get_attack())
+											other_organism.shift_fitness(-organism.get_attack())
+											organism.shift_energy(organism.get_attack())
+											other_organism.shift_energy(other_organism.get_attack())
+
+										else:
+											for o in [organism, other_organism]:
+												if not o.get_aggression:
+													# o takes damage, and the other gets energy
+													o.fitness -= [organism, other_organism][[organism, other_organism].index(o) - 1].get_attack()
+													[[organism, other_organism].index(o) - 1].shift_energy([[organism, other_organism].index(o) - 1].get_attack())
+
+									elif organism.get_mating() and other_organism.get_mating():
+										# Reproduce
+										if len(self.organisms) < Constants.POPULATION_LIMIT:
+											organism.shift_energy(-organism.get_size()*10)
+											other_organism.shift_energy(-other_organism.get_size()*10)
+
+											average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
+
+											average_gene_dict = {"colour": tuple([(c1+c2)/2 for c1, c2 in zip(organism.get_colour(), other_organism.get_colour())]),
+											"point_count": (organism.get_point_count() + other_organism.get_point_count())//2,
+											"size": (organism.get_size() + other_organism.get_size())//2,
+											"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + random() - (1/2),
+											"input_weights": [(iw1+iw2)/2 + random() - (1/2) for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
+											"output_weights": [(ow1+ow2)/2 + random() - (1/2) for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
+
+											average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
+
+											average_name = organism.get_name() # There's no such thing as an "average name", so one organism just wins
+
+											# Finally, the offspring is created!
+											self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name))
+
+											organism.set_mating(False)
+											other_organism.set_mating(False)
 
 				# UI drawing
 				pygame.draw.rect(screen, (UI.UI_COLOUR), (screen_dimensions_without_hud[0], 0, screen_dimensions_without_hud[0], screen_dimensions[1]))
@@ -247,26 +294,32 @@ class Game():
 					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 0+1*UI.PADDING, self.target_organism.get_name(), UI.HEADER_TEXT_SIZE)
 					
 					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+2*UI.PADDING,
+						"Generation: "+str(self.target_organism.get_generation()))
+
+					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+3*UI.PADDING,
 						"Lifespan: "+str(self.target_organism.get_current_lifespan())+"/"+str(self.target_organism.get_max_lifespan()),
 						UI.TEXT_SIZE)
 					
-					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+3*UI.PADDING,
+					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+4*UI.PADDING,
 						"Fitness: "+str(self.target_organism.get_current_fitness())+"/"+str(self.target_organism.get_max_fitness()),
 						UI.TEXT_SIZE)
 					
-					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+4*UI.PADDING,
+					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+5*UI.PADDING,
 						"Energy: "+str(self.target_organism.get_current_energy())+"/"+str(self.target_organism.get_max_energy()),
 						UI.TEXT_SIZE)
 
-					if self.target_organism.object_detected:
-						self.can_see_text = "Can see: "+self.target_organism.object_detected.get_name()
+					if self.target_organism.get_object_detected():
+						self.can_see_text = "Can see: "+self.target_organism.get_object_detected().get_name()
 					else:
 						self.can_see_text = "Can see: none"
-					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+5*UI.PADDING,
+					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+6*UI.PADDING,
 						self.can_see_text, UI.TEXT_SIZE)
 
-					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+6*UI.PADDING,
+					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+7*UI.PADDING,
 						"Nodes: "+str(self.target_organism.get_point_count()))
+
+					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+8*UI.PADDING,
+						"Mood: "+self.target_organism.get_mood_name())
 
 				pygame.display.flip() #Updates display
 				clock.tick(60)

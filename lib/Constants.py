@@ -1,0 +1,9 @@
+# Some constants that are vital to the simulation
+
+STARTING_POPULATION = 750
+POPULATION_LIMIT = 1100
+
+INPUT_NOTES = 15
+OUTPUT_NODES = 3
+
+PASSIVE_ENERGY_GAIN = 10

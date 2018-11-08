@@ -13,7 +13,7 @@ from math import tanh
 from random import randint
 from random import random
 
-from lib import Name
+from lib import Constants
 
 class Organism():
 	
@@ -31,9 +31,9 @@ class Organism():
 	"""
 			
 	
-	def __init__(self, position, gene_dict, generation=1):
+	def __init__(self, position, gene_dict, generation, name):
 		super(Organism, self).__init__()
-		self.name = Name.generate_name()
+		self.name = name
 
 		''' The gene dictionary and the following block control traits of the organism. '''
 		self.gene_dict = gene_dict
@@ -62,7 +62,7 @@ class Organism():
 		self.acceleration = [0, 0] # [0] is change in magnitude, [1] is change in angle
 		self.rotational_velocity = 0
 		self.rotational_acceleration = 0
-		self.mood = random()*2-1 # Mood is between -1 and 1. -1 is max friendly (reproduction mode) while +1 is max unfriendly (kill mode)
+		self.mood = 0 # Mood is between -1 and 1. -1 is max friendly (reproduction mode) while +1 is max unfriendly (kill mode)
 
 		self.max_velocity = self.gene_dict["point_count"] / self.gene_dict["size"]
 		self.max_rotational_velocity = 10/self.gene_dict["point_count"]
@@ -73,6 +73,9 @@ class Organism():
 		1, 1, 1, 1, 1, 1, 1, 1]
 
 		self.object_detected = None
+
+		self.aggression = False
+		self.mating = False
 
 	def update(self):
 		
@@ -116,6 +119,7 @@ class Organism():
 		# Limit some stuff
 		self.acceleration[0] = 0
 		self.rotational_acceleration = 0
+		self.current_fitness = min([self.current_fitness, self.max_fitness])
 		
 		if abs(self.velocity[0]) > self.max_velocity:
 			self.velocity[0] = self.max_velocity*self.max_velocity/self.velocity[0]
@@ -128,16 +132,20 @@ class Organism():
 		if self.current_lifespan < 0:
 			self.die()
 
-		self.current_energy -= self.gene_dict["point_count"] # It should take more energy to maintain more points
-		self.current_energy -= self.gene_dict["size"] # Being larger should cost more absolute energy
-		self.current_energy -= abs(self.acceleration[0]) # Inertia
-		self.current_energy -= abs(self.rotational_acceleration)
-		self.current_energy += 5 # Energy will be gained at rest. This is like sleeping
+		self.current_energy -= self.gene_dict["point_count"]//2 # It should take more energy to maintain more points
+		self.current_energy -= self.gene_dict["size"]//2 # Being larger should cost more absolute energy
+		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
+		self.current_energy -= abs(self.rotational_acceleration)//2
+		self.current_energy += Constants.PASSIVE_ENERGY_GAIN # Energy will be gained at rest. This is like sleeping
 								 # Hopefully organisms will evolve to "sleep" when energy is low by not moving
 		
 		if self.current_energy < 0:
 			self.current_fitness += self.current_energy
 			self.current_energy = 0
+
+		elif self.current_energy >= self.max_energy:
+			self.current_fitness += 1
+			self.current_energy = self.max_energy
 		
 		if self.current_fitness < 0:
 			self.die()
@@ -181,6 +189,18 @@ class Organism():
 		self.acceleration[0] = self.output_1
 		self.rotational_acceleration = self.output_2
 		self.mood = self.output_3
+
+		if self.mood >= -1 and self.mood <= -0.9:
+			self.aggression = True
+			self.mating = False
+			
+		elif self.mood > -0.9 and self.mood < 0.9:
+			self.aggression = False
+			self.mating = False
+
+		elif self.mood >= 0.9 and self.mood <= 1:
+			self.aggression = False
+			self.mating = True
 
 	def draw(self, surface):
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)
@@ -279,3 +299,41 @@ class Organism():
 
 	def get_point_count(self):
 		return self.gene_dict["point_count"]
+
+	def get_object_detected(self):
+		return self.object_detected
+
+	def get_aggression(self):
+		return self.aggression
+
+	def get_mating(self):
+		return self.mating
+
+	def get_attack(self):
+		return (abs(self.velocity[0])+abs(self.rotational_velocity)) // 2
+
+	def get_behaviour_bias(self):
+		return self.gene_dict["behaviour_bias"]
+
+	def get_input_weights(self):
+		return self.gene_dict["input_weights"]
+
+	def get_output_weights(self):
+		return self.gene_dict["output_weights"]
+
+	def get_mood_name(self):
+		if self.aggression:
+			return "Aggressive"
+		elif self.mating:
+			return "Reproductive"
+		else:
+			return "Neutral"
+
+	def shift_fitness(self, v):
+		self.current_fitness += v
+
+	def shift_energy(self, v):
+		self.current_energy += v
+
+	def set_mating(self, new_mating):
+		self.mating = new_mating
