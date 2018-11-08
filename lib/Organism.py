@@ -176,12 +176,11 @@ class Organism():
 		self.output_1, self.output_2, self.output_3 = tanh(self.output_1), tanh(self.output_2), tanh(self.output_3)
 		self.output_1 *= self.gene_dict["output_weights"][0]
 		self.output_2 *= self.gene_dict["output_weights"][1]
-		self.output_3 = self.gene_dict["output_weights"][2]
+		self.output_3 *= self.gene_dict["output_weights"][2]
 
 		self.acceleration[0] = self.output_1
 		self.rotational_acceleration = self.output_2
-
-		pass
+		self.mood = self.output_3
 
 	def draw(self, surface):
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)

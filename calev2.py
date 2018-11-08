@@ -151,7 +151,7 @@ class Game():
 										#self.moisture_map = pass
 										#self.temperature_map = pass
 
-										for i in range(100):
+										for i in range(300):
 											self.organisms.append(self.generate_random_organism())
 
 										mainscreen_timestamp = time()
@@ -229,8 +229,6 @@ class Game():
 				for organism in self.organisms:
 					if not organism.get_dead():
 						organism.update()
-						# The nested list comprehension provides a list of all other organisms that the current organism can see/interact with
-						#organism.make_decision([o for o in self.organisms if o != organism and max([self.point_in_triangle(p, o.get_vision()) for p in organism.get_polygon()])])
 						for zone in self.zones:
 							if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(zone)):
 								self.zone_lists[self.zones.index(zone)].append(organism)
@@ -239,6 +237,7 @@ class Game():
 
 				for zone_list in self.zone_lists:
 					for organism in zone_list:
+						# The nested list comprehension provides a list of all other organisms that the current organism can see/interact with
 						organism.make_decision([o for o in zone_list if o != organism and max([self.point_in_triangle(p, o.get_vision()) for p in organism.get_polygon()])])
 
 				# UI drawing
