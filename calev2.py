@@ -8,7 +8,7 @@ from pygame.locals import *
 from random import randint
 from random import random
 
-from math import radians
+from math import radians, ceil
 
 from time import time
 
@@ -50,9 +50,9 @@ class Game():
 
 		self.target_organism = None
 
-		self.zone_size = 133
-		self.zone_rows = 6
-		self.zone_columns = 7
+		self.zone_size = 70 # I just chose a zone size that seemed fastest
+		self.zone_rows = ceil(screen_dimensions_without_hud[1]/self.zone_size)
+		self.zone_columns = ceil(screen_dimensions_without_hud[0]/self.zone_size)
 		self.zones = []
 		self.zone_lists = []
 		for i in range(self.zone_columns):
@@ -239,11 +239,13 @@ class Game():
 
 				for zone_list in self.zone_lists:
 					for organism in zone_list:
+						number_of_interactions = 0
 						for other_organism in zone_list:
 							if organism != other_organism:
 								
 								if max([self.point_in_triangle(p, other_organism.get_vision()) for p in organism.get_polygon()]):
 									organism.make_decision([other_organism])
+									number_of_interactions += 1
 
 								if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(other_organism.get_hitbox())):
 									if organism.get_aggression() or other_organism.get_aggression():
@@ -289,6 +291,11 @@ class Game():
 
 											organism.set_time_left_before_mating(organism.get_reproduction_wait_period())
 											other_organism.set_time_left_before_mating(other_organism.get_reproduction_wait_period())
+
+									number_of_interactions += 1
+
+								if number_of_interactions >= Constants.ORGANISM_INTERACTION_LIMIT:
+									break
 
 				# UI drawing
 				pygame.draw.rect(screen, (UI.UI_COLOUR), (screen_dimensions_without_hud[0], 0, screen_dimensions_without_hud[0], screen_dimensions[1]))
