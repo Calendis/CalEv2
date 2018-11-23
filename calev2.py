@@ -242,7 +242,6 @@ class Game():
 						number_of_interactions = 0
 						for other_organism in zone_list:
 							if organism != other_organism:
-								
 								if max([self.point_in_triangle(p, other_organism.get_vision()) for p in organism.get_polygon()]):
 									organism.make_decision([other_organism])
 									number_of_interactions += 1
