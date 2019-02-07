@@ -85,7 +85,6 @@ class Organism():
 		self.time_left_before_mating = self.reproduction_wait_period
 
 	def update(self):
-		
 		self.velocity[0] += self.acceleration[0]
 		self.rotational_velocity += self.rotational_acceleration
 
@@ -341,7 +340,9 @@ class Organism():
 	def get_input_names(self):
 		return self.input_names
 
-	def get_hidden_layer(self):
+	def get_hidden_layer(self, weights=True):
+		if weights:
+			return [h*w for h,w in zip(self.hidden_layer, self.get_output_weights())]
 		return self.hidden_layer
 
 	def get_outputs(self):
