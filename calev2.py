@@ -237,11 +237,10 @@ class Game():
 				for organism in self.organisms:
 
 					if not organism.get_dead():
-						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
 						organism.update()
 						organism.make_decision()
-
 						organism.draw(screen)
+						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
 
 				#self.quadtree.draw(screen)
 
@@ -303,6 +302,7 @@ class Game():
 					for seen_organism in seen_organisms:
 						if organism != seen_organism:
 							organism.make_decision([seen_organism])
+							break
 
 				# UI drawing
 				pygame.draw.rect(screen, (UI.UI_COLOUR), (screen_dimensions_without_hud[0], 0, screen_dimensions_without_hud[0], screen_dimensions[1]))
