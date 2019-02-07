@@ -50,7 +50,7 @@ class Game():
 
 		self.target_organism = None
 
-		self.zone_size = 70 # I just chose a zone size that seemed fastest
+		self.zone_size = Constants.ZONE_SIZE
 		self.zone_rows = ceil(screen_dimensions_without_hud[1]/self.zone_size)
 		self.zone_columns = ceil(screen_dimensions_without_hud[0]/self.zone_size)
 		self.zones = []
@@ -62,6 +62,23 @@ class Game():
 
 		self.total_creature_count = 0
 
+	def set_zone_size(self):
+		# Adjust the zone size to be smaller with more organisms but larger with fewer organisms
+		# This is just a curve I thought would be appropriate
+		# Not sure how to find an optimal curve...
+		if len(self.organisms) < 400:
+			self.zone_size = 60
+		else:
+			self.zone_size = 30
+		print(self.zone_size)
+		self.zone_rows = ceil(screen_dimensions_without_hud[1]/self.zone_size)
+		self.zone_columns = ceil(screen_dimensions_without_hud[0]/self.zone_size)
+		self.zones = []
+		self.zone_lists = []
+		for i in range(self.zone_columns):
+			for j in range(self.zone_rows):
+				self.zones.append((self.zone_size*i, self.zone_size*j, self.zone_size, self.zone_size))
+				self.zone_lists.append([])
 
 	def generate_random_organism(self):
 		self.total_creature_count += 1
@@ -149,7 +166,10 @@ class Game():
 										self.heightmap_surface.fill(UI.BACKGROUND_COLOUR)
 										for x in range(screen_dimensions_without_hud[0]):
 											for y in range(screen_dimensions_without_hud[1]):
-												pygame.draw.line(self.heightmap_surface, (Environment.get_colour(self.heightmap[x][y])), (x, y), (x, y))
+												#pygame.draw.line(self.heightmap_surface, (Environment.get_colour(self.heightmap[x][y])), (x, y), (x, y))
+												pygame.draw.rect(self.heightmap_surface, Environment.get_colour(self.heightmap[x][y]),
+													(x*Constants.ENVIRONMENT_ZONE_SIZE, y*Constants.ENVIRONMENT_ZONE_SIZE,
+														Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
 										rend_hmap_end_time = time()
 										print("Done. Took "+str(rend_hmap_end_time - rend_hmap_start_time)+" seconds.")
 										del rend_hmap_start_time, rend_hmap_end_time
@@ -220,10 +240,11 @@ class Game():
 				
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 5:
-					# Delete the dead organisms every five seconds
+					# Delete the dead organisms every five seconds and update the zone size
 					for organism in self.organisms[:]:
 						if organism.get_dead():
 							self.organisms.remove(organism)
+					self.set_zone_size()
 					mainscreen_timestamp = time()
 				
 				screen.blit(self.heightmap_surface, (0, 0))

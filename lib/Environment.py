@@ -16,7 +16,7 @@ def generate_noisemap(width, height, intensity=current_preset["intensity"], sea_
 	heightmap = []
 	map_seed = randint(1,20)*randint(1,1000000) #Perlin noise is not chaotic, so similar seeds will produce similar maps
 
-	map_size = 1
+	map_size = 7
 	octaves = 8 #Detail level of the map
 
 	#Sets up the heightmap as a nice 2D list
@@ -50,7 +50,7 @@ def generate_noisemap(width, height, intensity=current_preset["intensity"], sea_
 	return heightmap
 
 
-threshold_noisemap_values = {
+'''threshold_noisemap_values = {
 "0": UI.DEEP_BLUE,
 "0.05": UI.WATER_BLUE,
 "0.08": UI.BEACH_YELLOW,
@@ -64,4 +64,7 @@ threshold_noisemap_values = {
 def get_colour(value):
 	 for threshold in threshold_noisemap_values.keys():
 	 	if value <= float(threshold):
-	 		return threshold_noisemap_values[threshold]
+	 		return threshold_noisemap_values[threshold]'''
+
+def get_colour(v):
+	return tuple([int(min(255, max(v*3, 0)*255))]*3)
