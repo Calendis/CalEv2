@@ -334,7 +334,9 @@ class Organism():
 	def get_output_weights(self):
 		return self.gene_dict["output_weights"]
 
-	def get_inputs(self):
+	def get_inputs(self, weights=True):
+		if weights:
+			return [i*w for i,w in zip(self.sensory_input, self.get_input_weights())]
 		return self.sensory_input
 
 	def get_input_names(self):
@@ -346,6 +348,7 @@ class Organism():
 		return self.hidden_layer
 
 	def get_outputs(self):
+		# The weights have already been applied to these values
 		return [self.acceleration[0], self.rotational_acceleration, self.mood]
 
 	def get_mood_name(self):
