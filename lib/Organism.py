@@ -344,7 +344,7 @@ class Organism():
 
 	def get_hidden_layer(self, weights=True):
 		if weights:
-			return [h*w for h,w in zip(self.hidden_layer, self.get_output_weights())]
+			return [h*w for h,w in zip(self.hidden_layer, self.get_hidden_weights())]
 		return self.hidden_layer
 
 	def get_outputs(self):
