@@ -72,6 +72,9 @@ class Organism():
 		self.sensory_input = [self.current_energy, self.current_fitness, self.gene_dict["behaviour_bias"], self.acceleration[0], self.rotational_acceleration, self.velocity[0], self.rotational_velocity,
 		1, 1, 1, 1, 1, 1, 1, 1]
 
+		self.input_names = ["Energy", "Fit", "Bias", "Accel", "RotAccel", "Vel", "RotVel",
+		"NC Size", "NC Fit", "NC R", "NC G", "NC B", "NC Dist", "NC Spec", "NC Nodes"]
+
 		self.hidden_layer = [None]*Constants.HIDDEN_NODES
 
 		self.object_detected = None
@@ -163,7 +166,7 @@ class Organism():
 		if self.current_fitness < 0:
 			self.die()
 
-	def make_decision(self, objects_detected):
+	def make_decision(self, objects_detected=[]):
 		# energy, fitness, bias, nc size, nc fitness, nc r, nc g, nc b, nc distance, nc species, nc no. of points
 
 		'''
@@ -332,6 +335,18 @@ class Organism():
 	def get_output_weights(self):
 		return self.gene_dict["output_weights"]
 
+	def get_inputs(self):
+		return self.sensory_input
+
+	def get_input_names(self):
+		return self.input_names
+
+	def get_hidden_layer(self):
+		return self.hidden_layer
+
+	def get_outputs(self):
+		return [self.acceleration[0], self.rotational_acceleration, self.mood]
+
 	def get_mood_name(self):
 		if self.aggression:
 			return "Aggressive"
@@ -345,6 +360,7 @@ class Organism():
 
 	def get_reproduction_wait_period(self):
 		return self.reproduction_wait_period
+
 
 	def shift_fitness(self, v):
 		self.current_fitness += v

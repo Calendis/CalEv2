@@ -238,6 +238,7 @@ class Game():
 				for organism in self.organisms:
 					if not organism.get_dead():
 						organism.update()
+						organism.make_decision()
 						for zone in self.zones:
 							if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(zone)):
 								self.zone_lists[self.zones.index(zone)].append(organism)
@@ -343,11 +344,28 @@ class Game():
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
 						"Bias: "+str(self.target_organism.get_behaviour_bias()))
 
-					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+10*UI.PADDING,
-						"In-brain: "+str(self.target_organism.get_input_weights()))
+					# Draw the organism's brain
+					
+					# Draw the input layer
+					for n in range(len(self.target_organism.get_inputs())):
+						pygame.draw.circle(screen, UI.NODE_DRAW_COLOUR, (screen_dimensions_without_hud[0]+UI.PADDING, 2*n*UI.NODE_DRAW_SIZE+186), UI.NODE_DRAW_SIZE)
+						Text.draw_text(screen_dimensions_without_hud[0], 2*n*UI.NODE_DRAW_SIZE+186-UI.PADDING,
+						 str(round(self.target_organism.get_inputs()[n], 2)), UI.NODE_TEXT_SIZE, (255, 255, 255))
+						Text.draw_text(screen_dimensions_without_hud[0]+20, 2*n*UI.NODE_DRAW_SIZE+186-UI.PADDING,
+						 self.target_organism.get_input_names()[n], UI.NODE_TEXT_SIZE, (0, 0, 0))
 
-					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+11*UI.PADDING,
-						"Out-brain: "+str(self.target_organism.get_output_weights()))
+					
+					# Draw the hidden layer
+					for n in range(len(self.target_organism.get_hidden_layer())):
+						pygame.draw.circle(screen, UI.NODE_DRAW_COLOUR, (screen_dimensions_without_hud[0]+UI.PADDING+50, 2*n*UI.NODE_DRAW_SIZE+186), UI.NODE_DRAW_SIZE)
+						Text.draw_text(screen_dimensions_without_hud[0]+50, 2*n*UI.NODE_DRAW_SIZE+186-UI.PADDING,
+							str(round(self.target_organism.get_hidden_layer()[n], 2)), UI.NODE_TEXT_SIZE, (255, 255, 255))
+
+					for n in range(len(self.target_organism.get_outputs())):
+						pygame.draw.circle(screen, UI.NODE_DRAW_COLOUR, (screen_dimensions_without_hud[0]+UI.PADDING+100, 2*n*UI.NODE_DRAW_SIZE+186), UI.NODE_DRAW_SIZE)
+						Text.draw_text(screen_dimensions_without_hud[0]+100, 2*n*UI.NODE_DRAW_SIZE+186-UI.PADDING,
+							str(round(self.target_organism.get_outputs()[n], 2)), UI.NODE_TEXT_SIZE, (255, 255, 255))
+
 				else:
 					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 0+1*UI.PADDING, "Click an organism for more info...", UI.HEADER_TEXT_SIZE)
 
