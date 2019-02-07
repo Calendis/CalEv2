@@ -53,11 +53,15 @@ class Game():
 
 		self.total_creature_count = 0
 
-	def generate_random_organism(self):
+	def generate_random_organism(self, x=False, y=False):
 		self.total_creature_count += 1
+		if not x:
+			x = randint(0, screen_dimensions_without_hud[0])
+		if not y:
+			y = randint(0, screen_dimensions_without_hud[1])
 		return Organism.Organism(
-			[randint(0, screen_dimensions_without_hud[0]), # Random x position for organism
-			randint(0, screen_dimensions_without_hud[1])], # Random y position for organism
+			[x, # Random x position for organism
+			y], # Random y position for organism
 			{
 			"colour": (
 				randint(0, 255), # Random red value
@@ -205,6 +209,8 @@ class Game():
 								if button.hovered:
 									button.activate()
 
+							self.organisms.append(self.generate_random_organism(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
+
 				# Mainscreen logic below
 				screen.fill(UI.BACKGROUND_COLOUR)
 
@@ -237,6 +243,8 @@ class Game():
 
 						organism.draw(screen)
 
+				#self.quadtree.draw(screen)
+
 				for organism in self.organisms:
 					vision_collide_points = self.quadtree.query(organism.get_vision(), triangle=True)
 					organism_collide_points = self.quadtree.query(Quadtree.NormalRect(organism.get_hitbox_points()))
@@ -261,7 +269,7 @@ class Game():
 											o.fitness -= [organism, other_organism][[organism, other_organism].index(o) - 1].get_attack()
 											[[organism, other_organism].index(o) - 1].shift_energy([[organism, other_organism].index(o) - 1].get_attack())
 
-							elif organism.get_mating() and other_organism.get_mating():
+							elif organism.get_mating():# and other_organism.get_mating():
 								# Reproduce
 								if len(self.organisms) < Constants.POPULATION_LIMIT:
 									organism.shift_energy(-organism.get_size()*10)

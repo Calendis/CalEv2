@@ -217,6 +217,7 @@ class Organism():
 
 	def draw(self, surface):
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)
+		#pygame.draw.circle(surface, self.gene_dict["colour"], (int(self.position[0]), int(self.position[1])), self.gene_dict["point_count"])
 		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), (self.front_point), (self.back_point))
 
 		# Draws the organism's hitbox for debug purposes

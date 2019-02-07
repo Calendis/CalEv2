@@ -1,4 +1,5 @@
 # Quadtree implementation for collision detection
+import pygame
 
 def triangle_area(triangle):
 	x1 = triangle[0][0]
@@ -99,6 +100,14 @@ class Quadtree():
 		self.points = []
 		self.divided = False
 
+	def draw(self, surface):
+		pygame.draw.rect(surface, (255, 0, 0), (self.bounds.x-self.bounds.w, self.bounds.y-self.bounds.h, self.bounds.w+self.bounds.w, self.bounds.h+self.bounds.h), 1)
+		if self.divided:
+			self.ne.draw(surface)
+			self.nw.draw(surface)
+			self.se.draw(surface)
+			self.sw.draw(surface)
+
 	def insert(self, point):
 		if not self.bounds.contains(point):
 			return False
@@ -125,10 +134,10 @@ class Quadtree():
 		w = self.bounds.w
 		h = self.bounds.h
 
-		self.ne = Quadtree(CentreRect(x + y/2, y - h/2, w/2, h/2), self.capacity)
-		self.nw = Quadtree(CentreRect(x - y/2, y - h/2, w/2, h/2), self.capacity)
-		self.se = Quadtree(CentreRect(x + y/2, y + h/2, w/2, h/2), self.capacity)
-		self.sw = Quadtree(CentreRect(x - y/2, y + h/2, w/2, h/2), self.capacity)
+		self.ne = Quadtree(CentreRect(x + w/2, y - h/2, w/2, h/2), self.capacity)
+		self.nw = Quadtree(CentreRect(x - w/2, y - h/2, w/2, h/2), self.capacity)
+		self.se = Quadtree(CentreRect(x + w/2, y + h/2, w/2, h/2), self.capacity)
+		self.sw = Quadtree(CentreRect(x - w/2, y + h/2, w/2, h/2), self.capacity)
 
 		self.divided = True
 
