@@ -212,8 +212,11 @@ class Game():
 								if button.hovered:
 									button.activate()
 
-				#Mainscreen logic below
+				# Mainscreen logic below
 				screen.fill(UI.BACKGROUND_COLOUR)
+
+				if len(self.organisms) < Constants.POPULATION_MINIMUM:
+					self.organisms.append(self.generate_random_organism())
 				
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 5:
