@@ -209,7 +209,7 @@ class Game():
 								if button.hovered:
 									button.activate()
 
-							self.organisms.append(self.generate_random_organism(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
+							#self.organisms.append(self.generate_random_organism(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
 
 				# Mainscreen logic below
 				screen.fill(UI.BACKGROUND_COLOUR)
