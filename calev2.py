@@ -20,6 +20,7 @@ from lib import Environment
 from lib import Text
 from lib import Name
 from lib import Constants
+from lib import Quadtree
 
 pygame.init()
 
@@ -50,35 +51,7 @@ class Game():
 
 		self.target_organism = None
 
-		self.zone_size = Constants.ZONE_SIZE
-		self.zone_rows = ceil(screen_dimensions_without_hud[1]/self.zone_size)
-		self.zone_columns = ceil(screen_dimensions_without_hud[0]/self.zone_size)
-		self.zones = []
-		self.zone_lists = []
-		for i in range(self.zone_columns):
-			for j in range(self.zone_rows):
-				self.zones.append((self.zone_size*i, self.zone_size*j, self.zone_size, self.zone_size))
-				self.zone_lists.append([])
-
 		self.total_creature_count = 0
-
-	def set_zone_size(self):
-		# Adjust the zone size to be smaller with more organisms but larger with fewer organisms
-		# This is just a curve I thought would be appropriate
-		# Not sure how to find an optimal curve...
-		if len(self.organisms) < 400:
-			self.zone_size = 60
-		else:
-			self.zone_size = 30
-		print(self.zone_size)
-		self.zone_rows = ceil(screen_dimensions_without_hud[1]/self.zone_size)
-		self.zone_columns = ceil(screen_dimensions_without_hud[0]/self.zone_size)
-		self.zones = []
-		self.zone_lists = []
-		for i in range(self.zone_columns):
-			for j in range(self.zone_rows):
-				self.zones.append((self.zone_size*i, self.zone_size*j, self.zone_size, self.zone_size))
-				self.zone_lists.append([])
 
 	def generate_random_organism(self):
 		self.total_creature_count += 1
@@ -240,11 +213,10 @@ class Game():
 				
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 5:
-					# Delete the dead organisms every five seconds and update the zone size
+					# Delete the dead organisms every five seconds
 					for organism in self.organisms[:]:
 						if organism.get_dead():
 							self.organisms.remove(organism)
-					self.set_zone_size()
 					mainscreen_timestamp = time()
 				
 				screen.blit(self.heightmap_surface, (0, 0))
@@ -253,80 +225,76 @@ class Game():
 					button.update()
 					button.draw()
 
-				for zone_list in self.zone_lists:
-					zone_list.clear()
+				self.quadtree = Quadtree.Quadtree(Quadtree.CentreRect(screen_dimensions_without_hud[0]/2, screen_dimensions_without_hud[1]/2,
+							screen_dimensions_without_hud[0], screen_dimensions_without_hud[1]), Constants.QUADTREE_CAPACITY)
 
 				for organism in self.organisms:
+
 					if not organism.get_dead():
+						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
 						organism.update()
 						organism.make_decision()
-						for zone in self.zones:
-							if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(zone)):
-								self.zone_lists[self.zones.index(zone)].append(organism)
 
 						organism.draw(screen)
 
-				for zone_list in self.zone_lists:
-					for organism in zone_list:
-						number_of_interactions = 0
-						for other_organism in zone_list:
-							if organism != other_organism:
-								if max([self.point_in_triangle(p, other_organism.get_vision()) for p in organism.get_polygon()]):
-									organism.make_decision([other_organism])
-									number_of_interactions += 1
+				for organism in self.organisms:
+					vision_collide_points = self.quadtree.query(organism.get_vision(), triangle=True)
+					organism_collide_points = self.quadtree.query(Quadtree.NormalRect(organism.get_hitbox_points()))
+					colliding_organisms = [o[2] for o in organism_collide_points]
+					seen_organisms = [o[2] for o in vision_collide_points]
 
-								if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), pygame.Rect(other_organism.get_hitbox())):
-									if organism.get_aggression() or other_organism.get_aggression():
-										# Attack
-										if organism.get_aggression() and other_organism.get_aggression():
-											# Both organisms take damage and gain energy
-											organism.shift_fitness(-other_organism.get_attack())
-											other_organism.shift_fitness(-organism.get_attack())
-											organism.shift_energy(organism.get_attack())
-											other_organism.shift_energy(other_organism.get_attack())
+					for other_organism in colliding_organisms:
+						if organism != other_organism:
+							if organism.get_aggression() or other_organism.get_aggression():
+								# Attack
+								if organism.get_aggression() and other_organism.get_aggression():
+									# Both organisms take damage and gain energy
+									organism.shift_fitness(-other_organism.get_attack())
+									other_organism.shift_fitness(-organism.get_attack())
+									organism.shift_energy(organism.get_attack())
+									other_organism.shift_energy(other_organism.get_attack())
 
-										else:
-											for o in [organism, other_organism]:
-												if not o.get_aggression:
-													# o takes damage, and the other gets energy
-													o.fitness -= [organism, other_organism][[organism, other_organism].index(o) - 1].get_attack()
-													[[organism, other_organism].index(o) - 1].shift_energy([[organism, other_organism].index(o) - 1].get_attack())
+								else:
+									for o in [organism, other_organism]:
+										if not o.get_aggression:
+											# o takes damage, and the other gets energy
+											o.fitness -= [organism, other_organism][[organism, other_organism].index(o) - 1].get_attack()
+											[[organism, other_organism].index(o) - 1].shift_energy([[organism, other_organism].index(o) - 1].get_attack())
 
-									elif organism.get_mating() and other_organism.get_mating():
-										# Reproduce
-										if len(self.organisms) < Constants.POPULATION_LIMIT:
-											organism.shift_energy(-organism.get_size()*10)
-											other_organism.shift_energy(-other_organism.get_size()*10)
+							elif organism.get_mating() and other_organism.get_mating():
+								# Reproduce
+								if len(self.organisms) < Constants.POPULATION_LIMIT:
+									organism.shift_energy(-organism.get_size()*10)
+									other_organism.shift_energy(-other_organism.get_size()*10)
 
-											average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
+									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
 
-											average_gene_dict = {"colour": tuple([(c1+c2)/2 for c1, c2 in zip(organism.get_colour(), other_organism.get_colour())]),
-											"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()*randint(-1, 1)+0.1),
-											"size": (organism.get_size() + other_organism.get_size())//2 + round(random()*randint(-1, 1)+0.1),
-											"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random() - (1/2))/4,
-											"input_weights": [(iw1+iw2)/2 + (random() - (1/2))/4 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
-											"hidden_weights": [(hw1+hw2)/2 + (random() - (1/2))/4 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
-											"output_weights": [(ow1+ow2)/2 + (random() - (1/2))/4 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
-											# random() - (1/2)/4 is a weight mutation. This value should be studied, closely, as it is the "step size" for the neural net
+									average_gene_dict = {"colour": tuple([(c1+c2)/2 for c1, c2 in zip(organism.get_colour(), other_organism.get_colour())]),
+									"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()*randint(-1, 1)+0.1),
+									"size": (organism.get_size() + other_organism.get_size())//2 + round(random()*randint(-1, 1)+0.1),
+									"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random() - (1/2))/4,
+									"input_weights": [(iw1+iw2)/2 + (random() - (1/2))/4 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
+									"hidden_weights": [(hw1+hw2)/2 + (random() - (1/2))/4 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
+									"output_weights": [(ow1+ow2)/2 + (random() - (1/2))/4 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
+									# random() - (1/2)/4 is a weight mutation. This value should be studied, closely, as it is the "step size" for the neural net
 
-											average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
+									average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 
-											average_name = organism.get_name() # There's no such thing as an "average name", so one organism just wins
-											average_id = organism.get_id() # The same situation. Someone's id has to win out
+									average_name = organism.get_name() # There's no such thing as an "average name", so one organism just wins
+									average_id = organism.get_id() # The same situation. Someone's id has to win out
 
-											# Finally, the offspring is created!
-											self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id))
+									# Finally, the offspring is created!
+									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id))
 
-											organism.set_mating(False)
-											other_organism.set_mating(False)
+									organism.set_mating(False)
+									other_organism.set_mating(False)
 
-											organism.set_time_left_before_mating(organism.get_reproduction_wait_period())
-											other_organism.set_time_left_before_mating(other_organism.get_reproduction_wait_period())
+									organism.set_time_left_before_mating(organism.get_reproduction_wait_period())
+									other_organism.set_time_left_before_mating(other_organism.get_reproduction_wait_period())
 
-									number_of_interactions += 1
-
-								if number_of_interactions >= Constants.ORGANISM_INTERACTION_LIMIT:
-									break
+					for seen_organism in seen_organisms:
+						if organism != seen_organism:
+							organism.make_decision([seen_organism])
 
 				# UI drawing
 				pygame.draw.rect(screen, (UI.UI_COLOUR), (screen_dimensions_without_hud[0], 0, screen_dimensions_without_hud[0], screen_dimensions[1]))

@@ -274,6 +274,10 @@ class Organism():
 	def get_hitbox(self):
 		return self.hitbox
 
+	def get_hitbox_points(self):
+		h = self.get_hitbox()
+		return [(h[0], h[1]), (h[0]+h[2], h[1]), (h[0], h[1]+h[3]), (h[0]+h[2], h[1]+h[3])]
+
 	def get_current_fitness(self):
 		return self.current_fitness
 
