@@ -19,7 +19,7 @@ class Organism():
 	
 	"""The class for organisms. As opposed to creating separate animal and plants,
 	in this version I am only going to have one organism type. Some may evolve to
-	be animalistic, and some may evolve to be plant-like. I am going to try and be
+	be animal-like, and some may evolve to be plant-like. I am going to try and be
 	as general as possible and avoid arbitrariness. Classification of kingdom and species
 	can/will be done from an outside perspective as in real life, as opposed to being a
 	deeper property of the organism.
@@ -31,9 +31,10 @@ class Organism():
 	"""
 			
 	
-	def __init__(self, position, gene_dict, generation, name):
+	def __init__(self, position, gene_dict, generation, name, idname):
 		super(Organism, self).__init__()
 		self.name = name
+		self.idname = idname
 
 		''' The gene dictionary and the following block control traits of the organism. '''
 		self.gene_dict = gene_dict
@@ -42,12 +43,10 @@ class Organism():
 		self.gene_dict["size"] = max(10, self.gene_dict["size"])
 		self.max_energy = gene_dict["size"]*250
 		self.max_fitness = gene_dict["size"]*25*gene_dict["point_count"] # Give an incentive to evolve more points
-		self.max_lifespan = 30*self.gene_dict["size"] + 500
 		self.generation = generation
 		
 		self.current_energy = self.max_energy
 		self.current_fitness = self.max_fitness / 2
-		self.current_lifespan = self.max_lifespan
 		self.dead = False
 
 		self.position = position
@@ -125,6 +124,15 @@ class Organism():
 		self.rotational_acceleration = 0
 		self.current_fitness = min([self.current_fitness, self.max_fitness])
 		
+		if self.position[0] < self.gene_dict["size"]:
+			self.position[0] = self.gene_dict["size"]
+		elif self.position[0] > 930 - self.gene_dict["size"]:
+			self.position[0] = 930 - self.gene_dict["size"]
+		if self.position[1] < self.gene_dict["size"]:
+			self.position[1] = self.gene_dict["size"]
+		elif self.position[1] > 700 - self.gene_dict["size"]:
+			self.position[1] = 700 - self.gene_dict["size"]
+		
 		if abs(self.velocity[0]) > self.max_velocity:
 			self.velocity[0] = self.max_velocity*self.max_velocity/self.velocity[0]
 		
@@ -132,9 +140,6 @@ class Organism():
 			self.rotational_velocity = self.max_rotational_velocity**2/self.rotational_velocity
 		
 		# This block is for energy consumption
-		self.current_lifespan -= 1
-		if self.current_lifespan < 0:
-			self.die()
 
 		self.time_left_before_mating -= 1
 		if self.time_left_before_mating < 0:
@@ -145,7 +150,7 @@ class Organism():
 		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
 		self.current_energy -= abs(self.rotational_acceleration)//2
 		self.current_energy += Constants.PASSIVE_ENERGY_GAIN # Energy will be gained at rest. This is like sleeping
-								 # Hopefully organisms will evolve to "sleep" when energy is low by not moving
+															 # Hopefully organisms will evolve to "sleep" when energy is low by not moving
 		
 		if self.current_energy < 0:
 			self.current_fitness += self.current_energy
@@ -255,23 +260,20 @@ class Organism():
 		return v
 
 	def die(self):
-		self.gene_dict["colour"] = (150, 150, 150)
+		self.gene_dict["colour"] = (0, 0, 0)
 		self.dead = True
 
 	def get_name(self):
 		return self.name
+
+	def get_id(self):
+		return str(self.idname)
 
 	def get_dead(self):
 		return self.dead
 
 	def get_hitbox(self):
 		return self.hitbox
-
-	def get_current_lifespan(self):
-		return self.current_lifespan
-
-	def get_max_lifespan(self):
-		return self.max_lifespan
 
 	def get_current_fitness(self):
 		return self.current_fitness

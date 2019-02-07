@@ -60,8 +60,11 @@ class Game():
 				self.zones.append((self.zone_size*i, self.zone_size*j, self.zone_size, self.zone_size))
 				self.zone_lists.append([])
 
+		self.total_creature_count = 0
+
 
 	def generate_random_organism(self):
+		self.total_creature_count += 1
 		return Organism.Organism(
 			[randint(0, screen_dimensions_without_hud[0]), # Random x position for organism
 			randint(0, screen_dimensions_without_hud[1])], # Random y position for organism
@@ -76,7 +79,7 @@ class Game():
 			"behaviour_bias": random()*2-1,
 			"input_weights": [random()*2-1 for i in range(15)],
 			"output_weights": [random()*2-1 for i in range(3)]
-			}, 1, Name.generate_name()
+			}, 1, Name.generate_name(), self.total_creature_count
 			)
 
 	def triangle_area(self, triangle):
@@ -281,9 +284,10 @@ class Game():
 											average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 
 											average_name = organism.get_name() # There's no such thing as an "average name", so one organism just wins
+											average_id = organism.get_id() # The same situation. Someone's id has to win out
 
 											# Finally, the offspring is created!
-											self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name))
+											self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id))
 
 											organism.set_mating(False)
 											other_organism.set_mating(False)
@@ -306,7 +310,7 @@ class Game():
 						"Generation: "+str(self.target_organism.get_generation()))
 
 					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+3*UI.PADDING,
-						"Lifespan: "+str(self.target_organism.get_current_lifespan())+"/"+str(self.target_organism.get_max_lifespan()),
+						"Origin ID: "+self.target_organism.get_id(),
 						UI.TEXT_SIZE)
 					
 					Text.draw_text(screen_dimensions_without_hud[0]+1*UI.PADDING, 8+4*UI.PADDING,
