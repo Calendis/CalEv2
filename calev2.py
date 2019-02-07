@@ -77,8 +77,9 @@ class Game():
 			"point_count": randint(3, 10),
 			"size": randint(10, 32),
 			"behaviour_bias": random()*2-1,
-			"input_weights": [random()*2-1 for i in range(15)],
-			"output_weights": [random()*2-1 for i in range(3)]
+			"input_weights": [random()*2-1 for i in range(Constants.INPUT_NODES)],
+			"hidden_weights": [random()*2-1 for i in range(Constants.HIDDEN_NODES)],
+			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)]
 			}, 1, Name.generate_name(), self.total_creature_count
 			)
 
@@ -279,7 +280,9 @@ class Game():
 											"size": (organism.get_size() + other_organism.get_size())//2 + round(random()*randint(-1, 1)+0.1),
 											"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random() - (1/2))/4,
 											"input_weights": [(iw1+iw2)/2 + (random() - (1/2))/4 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
+											"hidden_weights": [(hw1+hw2)/2 + (random() - (1/2))/4 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
 											"output_weights": [(ow1+ow2)/2 + (random() - (1/2))/4 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
+											# random() - (1/2)/4 is a weight mutation. This value should be studied, closely, as it is the "step size" for the neural net
 
 											average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 

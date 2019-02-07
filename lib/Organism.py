@@ -26,11 +26,10 @@ class Organism():
 
 	The keys needed in the gene dictionary are:
 
-	colour, point_count, size, behaviour_bias, input_weights, output_weights
+	colour, point_count, size, behaviour_bias, input_weights, hidden_weights, output_weights
 
 	"""
 			
-	
 	def __init__(self, position, gene_dict, generation, name, idname):
 		super(Organism, self).__init__()
 		self.name = name
@@ -72,6 +71,8 @@ class Organism():
 		# Energy, fitness, bias, accel, rotaccel, vel, rotvel, nc size, nc fitness, nc r, nc g, nc b, nc distance, nc species, nc no. of points
 		self.sensory_input = [self.current_energy, self.current_fitness, self.gene_dict["behaviour_bias"], self.acceleration[0], self.rotational_acceleration, self.velocity[0], self.rotational_velocity,
 		1, 1, 1, 1, 1, 1, 1, 1]
+
+		self.hidden_layer = [None]*Constants.HIDDEN_NODES
 
 		self.object_detected = None
 
@@ -138,13 +139,12 @@ class Organism():
 		
 		if abs(self.rotational_velocity) > self.max_rotational_velocity:
 			self.rotational_velocity = self.max_rotational_velocity**2/self.rotational_velocity
-		
-		# This block is for energy consumption
 
 		self.time_left_before_mating -= 1
 		if self.time_left_before_mating < 0:
 			self.time_left_before_mating = 0
 
+		# This block is for energy consumption
 		self.current_energy -= self.gene_dict["point_count"]//2 # It should take more energy to maintain more points
 		self.current_energy -= self.gene_dict["size"]//2 # Being larger should cost more absolute energy
 		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
@@ -188,20 +188,17 @@ class Organism():
 			self.sensory_input[13] = 1
 			self.sensory_input[14] = objects_detected[0].gene_dict["point_count"]
 
-		self.output_1, self.output_2, self.output_3 = 0, 0, 0
-		for i in range(len(self.sensory_input)):
-			self.output_1 += self.sensory_input[i]*self.gene_dict["input_weights"][i]
-			self.output_2 += self.sensory_input[i]*self.gene_dict["input_weights"][i]
-			self.output_3 += self.sensory_input[i]*self.gene_dict["input_weights"][i]
-		
-		self.output_1, self.output_2, self.output_3 = tanh(self.output_1), tanh(self.output_2), tanh(self.output_3)
-		self.output_1 *= self.gene_dict["output_weights"][0]
-		self.output_2 *= self.gene_dict["output_weights"][1]
-		self.output_3 *= self.gene_dict["output_weights"][2]
+		self.outputs = [0]*Constants.OUTPUT_NODES
 
-		self.acceleration[0] = self.output_1
-		self.rotational_acceleration = self.output_2
-		self.mood = self.output_3
+		for i in range(len(self.hidden_layer)):
+			self.hidden_layer[i] = sum([tanh(self.sensory_input[j]) * self.gene_dict["input_weights"][j] for j in range(Constants.INPUT_NODES)])
+
+		for i in range(len(self.outputs)):
+			self.outputs[i] = sum(tanh(self.hidden_layer[j]) * self.gene_dict["hidden_weights"][j] for j in range(Constants.HIDDEN_NODES))
+
+		self.acceleration[0] = self.outputs[0] * self.gene_dict["output_weights"][0]
+		self.rotational_acceleration = self.outputs[1] * self.gene_dict["output_weights"][1]
+		self.mood = self.outputs[2] * self.gene_dict["output_weights"][2]
 
 		if self.mood >= -1 and self.mood <= -0.8:
 			self.aggression = True
@@ -328,6 +325,9 @@ class Organism():
 
 	def get_input_weights(self):
 		return self.gene_dict["input_weights"]
+
+	def get_hidden_weights(self):
+		return self.gene_dict["hidden_weights"]
 
 	def get_output_weights(self):
 		return self.gene_dict["output_weights"]
