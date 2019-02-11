@@ -215,6 +215,9 @@ class Organism():
 			if not self.time_left_before_mating:
 				self.mating = True
 
+	def bump(self):
+		self.acceleration[0] *= -0.5
+
 	def draw(self, surface):
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)
 		#pygame.draw.circle(surface, self.gene_dict["colour"], (int(self.position[0]), int(self.position[1])), self.gene_dict["point_count"])

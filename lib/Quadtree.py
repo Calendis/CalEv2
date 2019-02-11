@@ -51,10 +51,11 @@ class CentreRect():
 				return True
 
 		# An additional check is needed if shape is a triangle
-		if triangle:
+		# This is incredibly expensive, forget it
+		'''if triangle:
 			for point in self.points:
 				if point_in_triangle(point, shape):
-					return True
+					return True'''
 
 		return False
 

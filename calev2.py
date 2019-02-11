@@ -53,6 +53,8 @@ class Game():
 
 		self.total_creature_count = 0
 
+		self.toggle = True
+
 	def generate_random_organism(self, x=False, y=False):
 		self.total_creature_count += 1
 		if not x:
@@ -196,6 +198,10 @@ class Game():
 							# self.organisms[0].rotational_acceleration = 1
 							pass
 
+						if main_event.key == K_k:
+							self.toggle *= -1
+							self.toggle += 1
+
 					if main_event.type == pygame.KEYUP:
 						if main_event.key == K_x:
 							pass
@@ -251,6 +257,7 @@ class Game():
 					seen_organisms = [o[2] for o in vision_collide_points]
 
 					for other_organism in colliding_organisms:
+						other_organism.bump()
 						if organism != other_organism:
 							if organism.get_aggression() or other_organism.get_aggression():
 								# Attack
