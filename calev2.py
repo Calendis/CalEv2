@@ -48,6 +48,7 @@ class Game():
 		self.temperature_map = []
 
 		self.heightmap_surface = pygame.Surface((screen_dimensions_without_hud[0], screen_dimensions_without_hud[1]))
+		self.camera_offset = [0, 0]
 
 		self.target_organism = None
 
@@ -58,9 +59,9 @@ class Game():
 	def generate_random_organism(self, x=False, y=False):
 		self.total_creature_count += 1
 		if not x:
-			x = randint(0, screen_dimensions_without_hud[0])
+			x = randint(0, Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE)
 		if not y:
-			y = randint(0, screen_dimensions_without_hud[1])
+			y = randint(0, Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE)
 		return Organism.Organism(
 			[x, # Random x position for organism
 			y], # Random y position for organism
@@ -80,30 +81,18 @@ class Game():
 			}, 1, Name.generate_name(), self.total_creature_count
 			)
 
-	def triangle_area(self, triangle):
-		x1 = triangle[0][0]
-		y1 = triangle[0][1]
-		x2 = triangle[1][0]
-		y2 = triangle[1][1]
-		x3 = triangle[2][0]
-		y3 = triangle[2][1]
-
-		return abs((x1*(y2-y3) + x2*(y3-y1)+ x3*(y1-y2))/2)
-
-	def point_in_triangle(self, point, triangle):
-		total_area = self.triangle_area(triangle)
-
-		triangle_1 = (point, triangle[1], triangle[2])
-		area_1 = self.triangle_area(triangle_1)
-
-		triangle_2 = (triangle[0], point, triangle[2])
-		area_2 = self.triangle_area(triangle_2)
-
-		triangle_3 = (triangle[0], triangle[1], point)
-		area_3 = self.triangle_area(triangle_3)
-
-		return (total_area == area_1+area_2+area_3)
-
+	def draw_heightmap(self):
+		# Render heightmap currently in view
+		self.heightmap_surface.fill(UI.BACKGROUND_COLOUR)
+		for x in range(self.camera_offset[0], round(screen_dimensions_without_hud[0]/Constants.ENVIRONMENT_ZONE_SIZE) + self.camera_offset[0]):
+			for y in range(self.camera_offset[1], round(screen_dimensions_without_hud[1]/Constants.ENVIRONMENT_ZONE_SIZE) + self.camera_offset[1]):
+				#pygame.draw.line(self.heightmap_surface, (Environment.get_colour(self.heightmap[x][y])), (x, y), (x, y))
+				pygame.draw.rect(self.heightmap_surface, Environment.get_colour(self.heightmap[x][y]),
+					((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
+						Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
+				if self.toggle:
+					Text.draw_text((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
+						str(round(self.heightmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.heightmap_surface)
 
 	def gameloop(self):
 		while not self.done:
@@ -143,15 +132,7 @@ class Game():
 										
 										print("Rendering heightmap...")
 										rend_hmap_start_time = time()
-										self.heightmap_surface.fill(UI.BACKGROUND_COLOUR)
-										for x in range(Constants.MAP_WIDTH):
-											for y in range(Constants.MAP_HEIGHT):
-												#pygame.draw.line(self.heightmap_surface, (Environment.get_colour(self.heightmap[x][y])), (x, y), (x, y))
-												pygame.draw.rect(self.heightmap_surface, Environment.get_colour(self.heightmap[x][y]),
-													(x*Constants.ENVIRONMENT_ZONE_SIZE, y*Constants.ENVIRONMENT_ZONE_SIZE,
-														Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
-												Text.draw_text(x*Constants.ENVIRONMENT_ZONE_SIZE, y*Constants.ENVIRONMENT_ZONE_SIZE,
-													str(round(self.heightmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.heightmap_surface)
+										self.draw_heightmap()
 										rend_hmap_end_time = time()
 										print("Done. Took "+str(rend_hmap_end_time - rend_hmap_start_time)+" seconds.")
 										del rend_hmap_start_time, rend_hmap_end_time
@@ -205,54 +186,78 @@ class Game():
 							self.toggle *= -1
 							self.toggle += 1
 
+						if main_event.key == K_w:
+							if self.camera_offset[1] > 0:
+								self.camera_offset[1] -= 1
+								self.draw_heightmap()
+
+						if main_event.key == K_a:
+							if self.camera_offset[0] > 0:
+								self.camera_offset[0] -= 1
+								self.draw_heightmap()
+
+						if main_event.key == K_s:
+							if self.camera_offset[1] < Constants.MAP_HEIGHT-round(screen_dimensions_without_hud[1]/Constants.ENVIRONMENT_ZONE_SIZE):
+								self.camera_offset[1] += 1
+								self.draw_heightmap()
+
+						if main_event.key == K_d:
+							if self.camera_offset[0] < Constants.MAP_WIDTH-round(screen_dimensions_without_hud[0]/Constants.ENVIRONMENT_ZONE_SIZE):
+								self.camera_offset[0] += 1
+								self.draw_heightmap()
+
 					if main_event.type == pygame.KEYUP:
 						if main_event.key == K_x:
 							pass
 					if main_event.type == pygame.MOUSEBUTTONDOWN:
 						if main_event.button == 1:
 							for organism in self.organisms:
-								if pygame.Rect.colliderect(pygame.Rect(organism.get_hitbox()), (pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)):
+								oh = organism.get_hitbox()
+								oh[0] -= self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE
+								oh[1] -= self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE
+								if pygame.Rect.colliderect(pygame.Rect(oh), (pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)):
 									self.target_organism = organism
 
 							for button in self.buttons:
 								if button.hovered:
 									button.activate()
 
-							#self.organisms.append(self.generate_random_organism(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1]))
-
 				# Mainscreen logic below
 				screen.fill(UI.BACKGROUND_COLOUR)
+				screen.blit(self.heightmap_surface, (0, 0))
 
 				if len(self.organisms) < Constants.POPULATION_MINIMUM:
 					self.organisms.append(self.generate_random_organism())
 				
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 5:
-					# Delete the dead organisms every five seconds
+					# Delete the dead organisms and re-render the heightmap every five seconds
 					for organism in self.organisms[:]:
 						if organism.get_dead():
 							self.organisms.remove(organism)
 					mainscreen_timestamp = time()
 				
-				screen.blit(self.heightmap_surface, (0, 0))
+					self.draw_heightmap()
 				
 				for button in self.buttons:
 					button.update()
 					button.draw()
 
-				self.quadtree = Quadtree.Quadtree(Quadtree.CentreRect(screen_dimensions_without_hud[0]/2, screen_dimensions_without_hud[1]/2,
-							screen_dimensions_without_hud[0], screen_dimensions_without_hud[1]), Constants.QUADTREE_CAPACITY)
+				qt_width = Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE
+				qt_height = Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE
+				self.quadtree = Quadtree.Quadtree(Quadtree.CentreRect(qt_width/2, qt_height/2, qt_width, qt_height), Constants.QUADTREE_CAPACITY)
+				del qt_width, qt_height
 
 				for organism in self.organisms:
 
 					if not organism.get_dead():
 						organism.update()
 						organism.make_decision()
-						organism.draw(screen)
+						organism.draw(screen, [o*Constants.ENVIRONMENT_ZONE_SIZE for o in self.camera_offset])
 						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
 
 				if self.toggle:
-					self.quadtree.draw(screen)
+					self.quadtree.draw(screen, [o*Constants.ENVIRONMENT_ZONE_SIZE for o in self.camera_offset])
 
 				for organism in self.organisms:
 					vision_collide_points = self.quadtree.query(Quadtree.NormalRect(organism.get_vision_hitbox_points()))

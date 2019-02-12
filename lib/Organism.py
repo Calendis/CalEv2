@@ -130,12 +130,12 @@ class Organism():
 		
 		if self.position[0] < self.gene_dict["size"]:
 			self.position[0] = self.gene_dict["size"]
-		elif self.position[0] > 930 - self.gene_dict["size"]:
-			self.position[0] = 930 - self.gene_dict["size"]
+		'''elif self.position[0] > 930 - self.gene_dict["size"]:
+			self.position[0] = 930 - self.gene_dict["size"]'''
 		if self.position[1] < self.gene_dict["size"]:
 			self.position[1] = self.gene_dict["size"]
-		elif self.position[1] > 700 - self.gene_dict["size"]:
-			self.position[1] = 700 - self.gene_dict["size"]
+		'''elif self.position[1] > 700 - self.gene_dict["size"]:
+			self.position[1] = 700 - self.gene_dict["size"]'''
 		
 		if abs(self.velocity[0]) > self.max_velocity:
 			self.velocity[0] = self.max_velocity*self.max_velocity/self.velocity[0]
@@ -222,9 +222,13 @@ class Organism():
 		self.velocity[0] += magnitude
 		self.velocity[1] *= 0.5
 
-	def draw(self, surface):
-		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)
-		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), (self.front_point), (self.back_point))
+	def draw(self, surface, offset):
+		offset_polygon = [(p[0]-offset[0], p[1]-offset[1]) for p in self.polygon]
+		offset_front_point = (self.front_point[0]-offset[0], self.front_point[1]-offset[1])
+		offset_back_point = (self.back_point[0]-offset[0], self.back_point[1]-offset[1])
+
+		pygame.draw.polygon(surface, (self.gene_dict["colour"]), offset_polygon)
+		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), (offset_front_point), (offset_back_point))
 
 		# Draws the organism's hitbox for debug purposes
 		# pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 1)

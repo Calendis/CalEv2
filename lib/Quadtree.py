@@ -57,13 +57,16 @@ class Quadtree():
 		self.points = []
 		self.divided = False
 
-	def draw(self, surface):
-		pygame.draw.rect(surface, (255, 0, 0), (self.bounds.x-self.bounds.w, self.bounds.y-self.bounds.h, self.bounds.w+self.bounds.w, self.bounds.h+self.bounds.h), 1)
+	def draw(self, surface, offset):
+		offset_tlx = self.bounds.x-self.bounds.w-offset[0]
+		offset_tly = self.bounds.y-self.bounds.h-offset[1]
+
+		pygame.draw.rect(surface, (255, 0, 0), (offset_tlx, offset_tly, self.bounds.w+self.bounds.w, self.bounds.h+self.bounds.h), 1)
 		if self.divided:
-			self.ne.draw(surface)
-			self.nw.draw(surface)
-			self.se.draw(surface)
-			self.sw.draw(surface)
+			self.ne.draw(surface, offset)
+			self.nw.draw(surface, offset)
+			self.se.draw(surface, offset)
+			self.sw.draw(surface, offset)
 
 	def insert(self, point):
 		if not self.bounds.contains(point):
