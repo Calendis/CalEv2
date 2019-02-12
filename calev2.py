@@ -136,7 +136,7 @@ class Game():
 
 										print("Generating heightmap...")
 										gen_hmap_start_time = time()
-										self.heightmap = Environment.generate_noisemap(screen_dimensions_without_hud[0], screen_dimensions_without_hud[1])
+										self.heightmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
 										gen_hmap_end_time = time()
 										print("Done. Took "+str(gen_hmap_end_time - gen_hmap_start_time)+" seconds.")
 										del gen_hmap_start_time, gen_hmap_end_time
@@ -144,12 +144,14 @@ class Game():
 										print("Rendering heightmap...")
 										rend_hmap_start_time = time()
 										self.heightmap_surface.fill(UI.BACKGROUND_COLOUR)
-										for x in range(screen_dimensions_without_hud[0]):
-											for y in range(screen_dimensions_without_hud[1]):
+										for x in range(Constants.MAP_WIDTH):
+											for y in range(Constants.MAP_HEIGHT):
 												#pygame.draw.line(self.heightmap_surface, (Environment.get_colour(self.heightmap[x][y])), (x, y), (x, y))
 												pygame.draw.rect(self.heightmap_surface, Environment.get_colour(self.heightmap[x][y]),
 													(x*Constants.ENVIRONMENT_ZONE_SIZE, y*Constants.ENVIRONMENT_ZONE_SIZE,
 														Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
+												Text.draw_text(x*Constants.ENVIRONMENT_ZONE_SIZE, y*Constants.ENVIRONMENT_ZONE_SIZE,
+													str(round(self.heightmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.heightmap_surface)
 										rend_hmap_end_time = time()
 										print("Done. Took "+str(rend_hmap_end_time - rend_hmap_start_time)+" seconds.")
 										del rend_hmap_start_time, rend_hmap_end_time
