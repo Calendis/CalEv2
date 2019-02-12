@@ -76,8 +76,7 @@ class Game():
 			"behaviour_bias": random()*2-1,
 			"input_weights": [random()*2-1 for i in range(Constants.INPUT_NODES)],
 			"hidden_weights": [random()*2-1 for i in range(Constants.HIDDEN_NODES)],
-			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)],
-			"vis_ratio": randint(1, 19)/10
+			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)]
 			}, 1, Name.generate_name(), self.total_creature_count
 			)
 
