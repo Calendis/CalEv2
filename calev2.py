@@ -53,7 +53,7 @@ class Game():
 
 		self.total_creature_count = 0
 
-		self.toggle = True
+		self.toggle = False
 
 	def generate_random_organism(self, x=False, y=False):
 		self.total_creature_count += 1
@@ -75,7 +75,8 @@ class Game():
 			"behaviour_bias": random()*2-1,
 			"input_weights": [random()*2-1 for i in range(Constants.INPUT_NODES)],
 			"hidden_weights": [random()*2-1 for i in range(Constants.HIDDEN_NODES)],
-			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)]
+			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)],
+			"vis_ratio": randint(1, 19)/10
 			}, 1, Name.generate_name(), self.total_creature_count
 			)
 
@@ -248,16 +249,17 @@ class Game():
 						organism.draw(screen)
 						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
 
-				#self.quadtree.draw(screen)
+				if self.toggle:
+					self.quadtree.draw(screen)
 
 				for organism in self.organisms:
-					vision_collide_points = self.quadtree.query(organism.get_vision(), triangle=True)
+					vision_collide_points = self.quadtree.query(Quadtree.NormalRect(organism.get_vision_hitbox_points()))
 					organism_collide_points = self.quadtree.query(Quadtree.NormalRect(organism.get_hitbox_points()))
 					colliding_organisms = [o[2] for o in organism_collide_points]
 					seen_organisms = [o[2] for o in vision_collide_points]
 
 					for other_organism in colliding_organisms:
-						other_organism.bump()
+						organism.bump(other_organism.get_velocity()[0])
 						if organism != other_organism:
 							if organism.get_aggression() or other_organism.get_aggression():
 								# Attack

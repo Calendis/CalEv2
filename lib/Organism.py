@@ -57,6 +57,7 @@ class Organism():
 		self.hitbox = self.get_new_hitbox()
 		self.vision = self.get_new_vision()
 		self.original_vision = deepcopy(self.vision)
+		self.vision_hitbox = self.get_new_vision_hitbox()
 
 		self.velocity = [0, 0] # velocity[0] is magnitude, and velocity[1] is angle, in degrees
 		self.acceleration = [0, 0] # [0] is change in magnitude, [1] is change in angle
@@ -106,7 +107,6 @@ class Organism():
 			self.polygon[i][0] = self.position[0] + self.original_polygon[i][0]
 			self.polygon[i][1] = self.position[1] + self.original_polygon[i][1]
 
-
 		# Rotate all vision points around front point
 		for p in self.original_vision:
 			old_x = p[0]
@@ -121,6 +121,7 @@ class Organism():
 			self.vision[i][1] = self.position[1] + self.original_vision[i][1]
 		
 		self.hitbox = self.get_new_hitbox()
+		self.vision_hitbox = self.get_new_vision_hitbox()
 
 		# Limit some stuff
 		self.acceleration[0] = 0
@@ -189,6 +190,8 @@ class Organism():
 			self.sensory_input[12] = sqrt((self.get_position()[0]-objects_detected[0].get_position()[0])**2 + (self.get_position()[1]-objects_detected[0].get_position()[1])**2)
 			self.sensory_input[13] = 1
 			self.sensory_input[14] = objects_detected[0].gene_dict["point_count"]
+		else:
+			self.object_detected = None
 
 		self.outputs = [0]*Constants.OUTPUT_NODES
 
@@ -215,19 +218,20 @@ class Organism():
 			if not self.time_left_before_mating:
 				self.mating = True
 
-	def bump(self):
-		self.acceleration[0] *= -0.5
+	def bump(self, magnitude):
+		self.velocity[0] += magnitude
+		self.velocity[1] *= 0.5
 
 	def draw(self, surface):
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), self.polygon)
-		#pygame.draw.circle(surface, self.gene_dict["colour"], (int(self.position[0]), int(self.position[1])), self.gene_dict["point_count"])
 		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), (self.front_point), (self.back_point))
 
 		# Draws the organism's hitbox for debug purposes
 		# pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 1)
 
-		# And the vision triangle
-		# pygame.draw.polygon(surface, (0, 255, 255), self.vision, 1)
+		# And the vision triangle and hitbox
+		#pygame.draw.polygon(surface, (0, 255, 255), self.vision, 1)
+		#pygame.draw.rect(surface, (255, 0, 0), self.vision_hitbox, 1)
 
 	def generate_polygon(self):
 		points = []
@@ -257,9 +261,9 @@ class Organism():
 	def get_new_vision(self):
 		front_vision_point = list(self.front_point)
 		v = [front_vision_point,
-			[front_vision_point[0]-self.gene_dict["size"], front_vision_point[1]+2*self.gene_dict["size"]],
-			[front_vision_point[0]+self.gene_dict["size"], front_vision_point[1]+2*self.gene_dict["size"]]]
-		
+				[front_vision_point[0]-self.gene_dict["size"], front_vision_point[1]+2*self.gene_dict["size"]],
+				[front_vision_point[0]+self.gene_dict["size"], front_vision_point[1]+2*self.gene_dict["size"]]]
+				
 		return v
 
 	def die(self):
@@ -278,8 +282,25 @@ class Organism():
 	def get_hitbox(self):
 		return self.hitbox
 
+	def get_vision_hitbox(self):
+		return self.vision_hitbox
+
 	def get_hitbox_points(self):
 		h = self.get_hitbox()
+		return [(h[0], h[1]), (h[0]+h[2], h[1]), (h[0], h[1]+h[3]), (h[0]+h[2], h[1]+h[3])]
+
+	def get_vision(self):
+		return self.vision
+
+	def get_new_vision_hitbox(self):
+		return [
+			min(p[0] for p in self.vision),
+			min(p[1] for p in self.vision),
+			max(p[0] for p in self.vision)-min(p[0] for p in self.vision),
+			max(p[1] for p in self.vision)-min(p[1] for p in self.vision)]
+
+	def get_vision_hitbox_points(self):
+		h = self.get_vision_hitbox()
 		return [(h[0], h[1]), (h[0]+h[2], h[1]), (h[0], h[1]+h[3]), (h[0]+h[2], h[1]+h[3])]
 
 	def get_current_fitness(self):
@@ -309,9 +330,6 @@ class Organism():
 	def get_position(self):
 		return self.position
 
-	def get_vision(self):
-		return self.vision
-
 	def get_polygon(self):
 		return self.polygon
 
@@ -329,6 +347,9 @@ class Organism():
 
 	def get_attack(self):
 		return (abs(self.velocity[0])+abs(self.rotational_velocity)) // 2
+
+	def get_velocity(self):
+		return self.velocity
 
 	def get_behaviour_bias(self):
 		return self.gene_dict["behaviour_bias"]

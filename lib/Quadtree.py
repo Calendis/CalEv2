@@ -1,30 +1,6 @@
 # Quadtree implementation for collision detection
 import pygame
 
-def triangle_area(triangle):
-	x1 = triangle[0][0]
-	y1 = triangle[0][1]
-	x2 = triangle[1][0]
-	y2 = triangle[1][1]
-	x3 = triangle[2][0]
-	y3 = triangle[2][1]
-
-	return abs((x1*(y2-y3) + x2*(y3-y1)+ x3*(y1-y2))/2)
-
-def point_in_triangle(point, triangle):
-	total_area = triangle_area(triangle)
-
-	triangle_1 = (point, triangle[1], triangle[2])
-	area_1 = triangle_area(triangle_1)
-
-	triangle_2 = (triangle[0], point, triangle[2])
-	area_2 = triangle_area(triangle_2)
-
-	triangle_3 = (triangle[0], triangle[1], point)
-	area_3 = triangle_area(triangle_3)
-
-	return (total_area == area_1+area_2+area_3)
-
 class CentreRect():
 	"""docstring for CentreRect"""
 	def __init__(self, x, y, w, h):
@@ -42,20 +18,10 @@ class CentreRect():
 			point[1] >= self.y - self.h and
 			point[1] <= self.y + self.h)
 
-	def intersects(self, shape, triangle):
-		if not triangle:
-			shape = shape.points
-
-		for point in shape:
+	def intersects(self, rect):
+		for point in rect.points:
 			if self.contains(point):
 				return True
-
-		# An additional check is needed if shape is a triangle
-		# This is incredibly expensive, forget it
-		'''if triangle:
-			for point in self.points:
-				if point_in_triangle(point, shape):
-					return True'''
 
 		return False
 
@@ -75,22 +41,12 @@ class NormalRect():
 			point[1] >= self.y and
 			point[1] <= self.h)
 
-	def intersects(self, shape, triangle):
-		if not triangle:
-			shape = shape.points
-
-		for point in shape:
+	def intersects(self, rect):
+		for point in rect.points:
 			if self.contains(point):
 				return True
 
-		# An additional check is needed if shape is a triangle
-		if triangle:
-			for point in self.points:
-				if point_in_triangle(point, shape):
-					return True
-
 		return False
-		
 
 class Quadtree():
 	"""docstring for Quadtree"""
@@ -142,24 +98,24 @@ class Quadtree():
 
 		self.divided = True
 
-	def query(self, shape, triangle=False):
+	def query(self, rect):
 		found = []
-		if not self.bounds.intersects(shape, triangle):
+		if not self.bounds.intersects(rect):
+			# If the tree box doesn't even intersect with the hitbox
 			return found
 		
 		else:
 			for p in self.points:
-				if not triangle:
-					if shape.contains(p):
-						found.append(p)
-				else:
-					if point_in_triangle(p, shape):
-						found.append(p)
+				# Otherwise, check to see if our hitbox contains any of the inserted points
+				# Wait, can't this miss sometimes? I'm confused...
+				if rect.contains(p):
+					found.append(p)
 
 			if self.divided:
-				found += self.ne.query(shape, triangle)
-				found += self.nw.query(shape, triangle)
-				found += self.se.query(shape, triangle)
-				found += self.sw.query(shape, triangle)
+				# Recurse
+				found += self.ne.query(rect)
+				found += self.nw.query(rect)
+				found += self.se.query(rect)
+				found += self.sw.query(rect)
 
 			return found
