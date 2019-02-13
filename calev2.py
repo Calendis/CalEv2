@@ -267,8 +267,8 @@ class Game():
 						if organism.get_mood_name() == "Neutral":
 							pom = self.position_to_map_position(organism.get_hitbox())
 							if self.heightmap[pom[0]-1][pom[1]-1] > 0:
-								organism.shift_energy(organism.get_size())
-								self.heightmap[pom[0]-1][pom[1]-1] -= organism.get_size()
+								organism.shift_energy(organism.get_size()*Constants.EAT_GAIN_MULTIPLIER)
+								self.heightmap[pom[0]-1][pom[1]-1] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
 
 						organism.make_decision()
 						organism.draw(screen, [o*Constants.ENVIRONMENT_ZONE_SIZE for o in self.camera_offset])
@@ -305,9 +305,9 @@ class Game():
 							elif organism.get_mating():# and other_organism.get_mating():
 								# Reproduce
 								if len(self.organisms) < Constants.POPULATION_LIMIT:
-									organism.shift_energy(-organism.get_size()*50)
-									other_organism.shift_energy(-other_organism.get_size()*50)
-									average_energy_loss = (organism.get_size()*50)+(other_organism.get_size()*50)
+									organism.shift_energy(-organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
+									other_organism.shift_energy(-other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
+									average_energy_loss = (organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)+(other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
 
 									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
 

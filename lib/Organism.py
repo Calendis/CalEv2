@@ -48,7 +48,7 @@ class Organism():
 			self.current_energy = self.max_energy
 		else:
 			self.current_energy = starting_energy
-			
+
 		self.current_fitness = self.max_fitness / 2
 		self.dead = False
 
@@ -152,10 +152,10 @@ class Organism():
 			self.time_left_before_mating = 0
 
 		# This block is for energy consumption
-		self.current_energy -= self.gene_dict["point_count"]//2 # It should take more energy to maintain more points
+		self.current_energy -= self.gene_dict["point_count"]//4 # It should take more energy to maintain more points
 		self.current_energy -= self.gene_dict["size"] # Being larger should cost more absolute energy
 		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
-		self.current_energy -= abs(self.rotational_acceleration)//2
+		self.current_energy -= abs(self.rotational_acceleration)//3
 		self.current_energy += Constants.PASSIVE_ENERGY_GAIN # Energy loss will be lessened at rest. This is like sleeping
 															 # Hopefully organisms will evolve to "sleep" when energy is low by not moving
 		
