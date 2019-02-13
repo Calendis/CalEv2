@@ -12,9 +12,13 @@ OUTPUT_NODES = 3
 PASSIVE_ENERGY_GAIN = 1
 
 ENVIRONMENT_ZONE_SIZE = 60
- # Sets the energy per tile. A tile will usually start with about a fifth of this value
- # You could set this lower for a more difficult environment or higher for a more leniant one
+
+# Sets the energy per tile. A tile will usually start with about a fifth of this value
+# You could set this lower for a more difficult environment or higher for a more leniant one
+# This also provides the max passive energy value for a tile
 ENVIRONMENT_SCALING = 1000
+
+REPLENISH_VALUE = 50
 
 QUADTREE_CAPACITY = 2
 

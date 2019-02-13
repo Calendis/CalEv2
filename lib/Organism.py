@@ -30,7 +30,7 @@ class Organism():
 
 	"""
 			
-	def __init__(self, position, gene_dict, generation, name, idname):
+	def __init__(self, position, gene_dict, generation, name, idname, starting_energy=False):
 		super(Organism, self).__init__()
 		self.name = name
 		self.idname = idname
@@ -44,7 +44,11 @@ class Organism():
 		self.max_fitness = gene_dict["size"]*25*gene_dict["point_count"] # Give an incentive to evolve more points
 		self.generation = generation
 		
-		self.current_energy = self.max_energy
+		if not starting_energy:
+			self.current_energy = self.max_energy
+		else:
+			self.current_energy = starting_energy
+			
 		self.current_fitness = self.max_fitness / 2
 		self.dead = False
 

@@ -236,11 +236,17 @@ class Game():
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 5:
 					# Delete the dead organisms and re-render the heightmap every five seconds
+					# Also give energy to the map so the organisms have an energy source
 					for organism in self.organisms[:]:
 						if organism.get_dead():
 							self.organisms.remove(organism)
 					mainscreen_timestamp = time()
 				
+					for x in range(Constants.MAP_WIDTH):
+						for y in range(Constants.MAP_HEIGHT):
+							if self.heightmap[x][y] < Constants.ENVIRONMENT_SCALING:
+								self.heightmap[x][y] += Constants.REPLENISH_VALUE
+
 					self.draw_heightmap()
 				
 				for button in self.buttons:
@@ -299,8 +305,9 @@ class Game():
 							elif organism.get_mating():# and other_organism.get_mating():
 								# Reproduce
 								if len(self.organisms) < Constants.POPULATION_LIMIT:
-									organism.shift_energy(-organism.get_size()*10)
-									other_organism.shift_energy(-other_organism.get_size()*10)
+									organism.shift_energy(-organism.get_size()*50)
+									other_organism.shift_energy(-other_organism.get_size()*50)
+									average_energy_loss = (organism.get_size()*50)+(other_organism.get_size()*50)
 
 									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
 
@@ -319,7 +326,7 @@ class Game():
 									average_id = organism.get_id() # The same situation. Someone's id has to win out
 
 									# Finally, the offspring is created!
-									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id))
+									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id, average_energy_loss))
 
 									organism.set_mating(False)
 									other_organism.set_mating(False)
