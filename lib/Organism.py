@@ -130,12 +130,12 @@ class Organism():
 		
 		if self.position[0] < self.gene_dict["size"]:
 			self.position[0] = self.gene_dict["size"]
-		'''elif self.position[0] > 930 - self.gene_dict["size"]:
-			self.position[0] = 930 - self.gene_dict["size"]'''
+		elif self.position[0] > Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
+			self.position[0] = Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
 		if self.position[1] < self.gene_dict["size"]:
 			self.position[1] = self.gene_dict["size"]
-		'''elif self.position[1] > 700 - self.gene_dict["size"]:
-			self.position[1] = 700 - self.gene_dict["size"]'''
+		elif self.position[1] > Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
+			self.position[1] = Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
 		
 		if abs(self.velocity[0]) > self.max_velocity:
 			self.velocity[0] = self.max_velocity*self.max_velocity/self.velocity[0]
@@ -149,10 +149,10 @@ class Organism():
 
 		# This block is for energy consumption
 		self.current_energy -= self.gene_dict["point_count"]//2 # It should take more energy to maintain more points
-		self.current_energy -= self.gene_dict["size"]//2 # Being larger should cost more absolute energy
+		self.current_energy -= self.gene_dict["size"] # Being larger should cost more absolute energy
 		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
 		self.current_energy -= abs(self.rotational_acceleration)//2
-		self.current_energy += Constants.PASSIVE_ENERGY_GAIN # Energy will be gained at rest. This is like sleeping
+		self.current_energy += Constants.PASSIVE_ENERGY_GAIN # Energy loss will be lessened at rest. This is like sleeping
 															 # Hopefully organisms will evolve to "sleep" when energy is low by not moving
 		
 		if self.current_energy < 0:

@@ -9,7 +9,7 @@ INPUT_NODES = 15
 HIDDEN_NODES = 9
 OUTPUT_NODES = 3
 
-PASSIVE_ENERGY_GAIN = 5
+PASSIVE_ENERGY_GAIN = 1
 
 ENVIRONMENT_ZONE_SIZE = 60
  # Sets the energy per tile. A tile will usually start with about a fifth of this value

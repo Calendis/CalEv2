@@ -8,7 +8,7 @@ from pygame.locals import *
 from random import randint
 from random import random
 
-from math import radians, ceil
+from math import radians, ceil, floor
 
 from time import time
 
@@ -92,6 +92,13 @@ class Game():
 				if self.toggle:
 					Text.draw_text((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
 						str(round(self.heightmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.heightmap_surface)
+
+	def position_to_screen_position(self, pos):
+		return [pos[0]-self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE, pos[1]-self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE, pos[2], pos[3]]
+
+	def position_to_map_position(self, pos):
+		pos2 = self.position_to_screen_position(pos)
+		return [floor(pos2[0]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[0], floor(pos2[1]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[1]]
 
 	def gameloop(self):
 		while not self.done:
@@ -211,10 +218,8 @@ class Game():
 					if main_event.type == pygame.MOUSEBUTTONDOWN:
 						if main_event.button == 1:
 							for organism in self.organisms:
-								oh = organism.get_hitbox()
-								oh[0] -= self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE
-								oh[1] -= self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE
-								if pygame.Rect.colliderect(pygame.Rect(oh), (pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)):
+								if pygame.Rect.colliderect(pygame.Rect(self.position_to_screen_position(organism.get_hitbox())),
+									(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)):
 									self.target_organism = organism
 
 							for button in self.buttons:
@@ -251,6 +256,14 @@ class Game():
 
 					if not organism.get_dead():
 						organism.update()
+						
+						# Make the organism eat if in a neutral mood
+						if organism.get_mood_name() == "Neutral":
+							pom = self.position_to_map_position(organism.get_hitbox())
+							if self.heightmap[pom[0]-1][pom[1]-1] > 0:
+								organism.shift_energy(organism.get_size())
+								self.heightmap[pom[0]-1][pom[1]-1] -= organism.get_size()
+
 						organism.make_decision()
 						organism.draw(screen, [o*Constants.ENVIRONMENT_ZONE_SIZE for o in self.camera_offset])
 						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
