@@ -18,7 +18,7 @@ ENVIRONMENT_ZONE_SIZE = 60
 # Sets the energy per tile. A tile will usually start with about a fifth of this value
 # You could set this lower for a more difficult environment or higher for a more leniant one
 # This also provides the max passive energy value for a tile
-ENVIRONMENT_SCALING = 50000
+ENVIRONMENT_SCALING = 30000
 
 REPLENISH_VALUE = 250
 

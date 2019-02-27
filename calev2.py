@@ -7,6 +7,8 @@ from pygame.locals import *
 
 from random import randint
 from random import random
+from random import seed
+seed(10)
 
 from math import radians, ceil, floor
 
@@ -330,7 +332,7 @@ class Game():
 									"input_weights": [(iw1+iw2)/2 + (random() - (1/2))/4 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
 									"hidden_weights": [(hw1+hw2)/2 + (random() - (1/2))/4 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
 									"output_weights": [(ow1+ow2)/2 + (random() - (1/2))/4 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
-									# random() - (1/2)/4 is a weight mutation. This value should be studied, closely, as it is the "step size" for the neural net
+									# random() - (1/2)/4 is a weight mutation. This value should be studied closely, as it is the "step size" for the neural net
 
 									average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 

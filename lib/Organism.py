@@ -98,26 +98,40 @@ class Organism():
 		self.old_angle = self.angle
 		self.angle += self.rotational_velocity
 
-		# Rotate all polygon points around front point
+		# Rotate all polygon points around centre point
 		for p in self.original_polygon:
-			old_x = p[0]
-			old_y = p[1]
+			
+			cx = self.get_centre_point()[0] - self.position[0]
+			cy = self.get_centre_point()[1] - self.position[1]
+
+			old_x = p[0] - cx
+			old_y = p[1] - cy
 
 			p[0] = old_x*cos(radians(self.old_angle-self.angle))-old_y*sin(radians(self.old_angle-self.angle))
 			p[1] = old_y*cos(radians(self.old_angle-self.angle))+old_x*sin(radians(self.old_angle-self.angle))
+
+			p[0] += cx
+			p[1] += cy
 
 		# Redefine our polygon as our position plus our new rotation
 		for i in range(len(self.polygon)):
 			self.polygon[i][0] = self.position[0] + self.original_polygon[i][0]
 			self.polygon[i][1] = self.position[1] + self.original_polygon[i][1]
 
-		# Rotate all vision points around front point
+		# Rotate all vision points around centre point
 		for p in self.original_vision:
-			old_x = p[0]
-			old_y = p[1]
+			
+			cx = self.get_centre_point()[0] - self.position[0]
+			cy = self.get_centre_point()[1] - self.position[1]
+
+			old_x = p[0] - cx
+			old_y = p[1] - cy
 
 			p[0] = old_x*cos(radians(self.old_angle-self.angle))-old_y*sin(radians(self.old_angle-self.angle))
 			p[1] = old_y*cos(radians(self.old_angle-self.angle))+old_x*sin(radians(self.old_angle-self.angle))
+
+			p[0] += cx
+			p[1] += cy
 
 		# Redefine our vision as our vision position plus our new vision rotation
 		for i in range(len(self.vision)):
@@ -237,9 +251,13 @@ class Organism():
 
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), offset_polygon)
 		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), (offset_front_point), (offset_back_point))
+		
+		# Draws the organism's centre point (centre of bounding box)
+		#pygame.draw.line(surface, self.gene_dict["inverse_colour"],
+			#(self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1]), (self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1]))
 
-		# Draws the organism's hitbox for debug purposes
-		# pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 1)
+		# Draws the organism's hitbox (bounding) for debug purposes
+		#pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 1)
 
 		# And the vision triangle and hitbox
 		#pygame.draw.polygon(surface, (0, 255, 255), self.vision, 1)
@@ -314,6 +332,11 @@ class Organism():
 	def get_vision_hitbox_points(self):
 		h = self.get_vision_hitbox()
 		return [(h[0], h[1]), (h[0]+h[2], h[1]), (h[0], h[1]+h[3]), (h[0]+h[2], h[1]+h[3])]
+
+	def get_centre_point(self):
+		# Bounding box centre
+		b = self.get_hitbox()
+		return (b[0] + b[2]/2, b[1]+ b[3]/2)
 
 	def get_current_fitness(self):
 		return self.current_fitness

@@ -11,7 +11,7 @@ ridges = {"intensity": 1.2, "sea_level": -0.3}
 plains = {"intensity": 0.2, "sea_level": -0.17}
 spires = {"intensity": 6, "sea_level": 0.6}
 
-current_preset = plains
+current_preset = default_islands
 
 def generate_noisemap(width, height, intensity=current_preset["intensity"], sea_level=current_preset["sea_level"], complete_randomize=False, scramble=False):
 	heightmap = []
