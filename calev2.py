@@ -8,7 +8,6 @@ from pygame.locals import *
 from random import randint
 from random import random
 from random import seed
-seed(10)
 
 from math import radians, ceil, floor
 
