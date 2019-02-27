@@ -43,11 +43,11 @@ class Game():
 		
 		self.organisms = []
 
-		self.heightmap = []
-		self.moisture_map = []
-		self.temperature_map = []
+		self.nutrientmap = []
+		self.moisturemap = []
+		self.heatmap = []
 
-		self.heightmap_surface = pygame.Surface((screen_dimensions_without_hud[0], screen_dimensions_without_hud[1]))
+		self.map_surface = pygame.Surface((screen_dimensions_without_hud[0], screen_dimensions_without_hud[1]))
 		self.camera_offset = [0, 0]
 
 		self.target_organism = None
@@ -80,18 +80,17 @@ class Game():
 			}, 1, Name.generate_name(), self.total_creature_count
 			)
 
-	def draw_heightmap(self):
-		# Render heightmap currently in view
-		self.heightmap_surface.fill(UI.BACKGROUND_COLOUR)
+	def draw_maps(self):
+		# Render nutrientmap currently in view
+		self.map_surface.fill(UI.BACKGROUND_COLOUR)
 		for x in range(self.camera_offset[0], round(screen_dimensions_without_hud[0]/Constants.ENVIRONMENT_ZONE_SIZE) + self.camera_offset[0]):
 			for y in range(self.camera_offset[1], round(screen_dimensions_without_hud[1]/Constants.ENVIRONMENT_ZONE_SIZE) + self.camera_offset[1]):
-				#pygame.draw.line(self.heightmap_surface, (Environment.get_colour(self.heightmap[x][y])), (x, y), (x, y))
-				pygame.draw.rect(self.heightmap_surface, Environment.get_colour(self.heightmap[x][y]),
+				pygame.draw.rect(self.map_surface, Environment.get_colour(self.nutrientmap[x][y], self.heatmap[x][y], self.moisturemap[x][y]),
 					((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
 						Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
-				if self.toggle:
+				if False and self.toggle:
 					Text.draw_text((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
-						str(round(self.heightmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.heightmap_surface)
+						str(round(self.nutrientmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.map_surface)
 
 	def position_to_screen_position(self, pos):
 		return [pos[0]-self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE, pos[1]-self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE, pos[2], pos[3]]
@@ -129,22 +128,26 @@ class Game():
 
 										self.buttons.clear()
 
-										print("Generating heightmap...")
+										print("Generating environment...")
 										gen_hmap_start_time = time()
-										self.heightmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
+										
+										self.nutrientmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
+										self.heatmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
+										self.moisturemap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
+										
 										gen_hmap_end_time = time()
 										print("Done. Took "+str(gen_hmap_end_time - gen_hmap_start_time)+" seconds.")
 										del gen_hmap_start_time, gen_hmap_end_time
 										
-										print("Rendering heightmap...")
+										print("Rendering environment...")
+										
 										rend_hmap_start_time = time()
-										self.draw_heightmap()
+										self.draw_maps()
+										
 										rend_hmap_end_time = time()
 										print("Done. Took "+str(rend_hmap_end_time - rend_hmap_start_time)+" seconds.")
 										del rend_hmap_start_time, rend_hmap_end_time
 										
-										#self.moisture_map = pass
-										#self.temperature_map = pass
 
 										for i in range(Constants.STARTING_POPULATION):
 											self.organisms.append(self.generate_random_organism())
@@ -195,22 +198,22 @@ class Game():
 						if main_event.key == K_w:
 							if self.camera_offset[1] > 0:
 								self.camera_offset[1] -= 1
-								self.draw_heightmap()
+								self.draw_maps()
 
 						if main_event.key == K_a:
 							if self.camera_offset[0] > 0:
 								self.camera_offset[0] -= 1
-								self.draw_heightmap()
+								self.draw_maps()
 
 						if main_event.key == K_s:
 							if self.camera_offset[1] < Constants.MAP_HEIGHT-round(screen_dimensions_without_hud[1]/Constants.ENVIRONMENT_ZONE_SIZE):
 								self.camera_offset[1] += 1
-								self.draw_heightmap()
+								self.draw_maps()
 
 						if main_event.key == K_d:
 							if self.camera_offset[0] < Constants.MAP_WIDTH-round(screen_dimensions_without_hud[0]/Constants.ENVIRONMENT_ZONE_SIZE):
 								self.camera_offset[0] += 1
-								self.draw_heightmap()
+								self.draw_maps()
 
 					if main_event.type == pygame.KEYUP:
 						if main_event.key == K_x:
@@ -228,14 +231,14 @@ class Game():
 
 				# Mainscreen logic below
 				screen.fill(UI.BACKGROUND_COLOUR)
-				screen.blit(self.heightmap_surface, (0, 0))
+				screen.blit(self.map_surface, (0, 0))
 
 				if len(self.organisms) < Constants.POPULATION_MINIMUM:
 					self.organisms.append(self.generate_random_organism())
 				
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 5:
-					# Delete the dead organisms and re-render the heightmap every five seconds
+					# Delete the dead organisms and re-render the map every five seconds
 					# Also give energy to the map so the organisms have an energy source
 					for organism in self.organisms[:]:
 						if organism.get_dead():
@@ -244,10 +247,10 @@ class Game():
 				
 					for x in range(Constants.MAP_WIDTH):
 						for y in range(Constants.MAP_HEIGHT):
-							if self.heightmap[x][y] < Constants.ENVIRONMENT_SCALING:
-								self.heightmap[x][y] += Constants.REPLENISH_VALUE
+							if self.nutrientmap[x][y] < Constants.ENVIRONMENT_SCALING:
+								self.nutrientmap[x][y] += Constants.REPLENISH_VALUE
 
-					self.draw_heightmap()
+					self.draw_maps()
 				
 				for button in self.buttons:
 					button.update()
@@ -266,9 +269,9 @@ class Game():
 						# Make the organism eat if in a neutral mood
 						if organism.get_mood_name() == "Neutral":
 							pom = self.position_to_map_position(organism.get_hitbox())
-							if self.heightmap[pom[0]-1][pom[1]-1] > 0:
+							if self.nutrientmap[pom[0]-1][pom[1]-1] > 0:
 								organism.shift_energy(organism.get_size()*Constants.EAT_GAIN_MULTIPLIER)
-								self.heightmap[pom[0]-1][pom[1]-1] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
+								self.nutrientmap[pom[0]-1][pom[1]-1] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
 
 						organism.make_decision()
 						organism.draw(screen, [o*Constants.ENVIRONMENT_ZONE_SIZE for o in self.camera_offset])
