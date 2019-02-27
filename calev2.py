@@ -88,12 +88,15 @@ class Game():
 				pygame.draw.rect(self.map_surface, Environment.get_colour(self.nutrientmap[x][y], self.heatmap[x][y], self.moisturemap[x][y]),
 					((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
 						Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
-				if False and self.toggle:
+				if self.toggle:
 					Text.draw_text((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
 						str(round(self.nutrientmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.map_surface)
 
 	def position_to_screen_position(self, pos):
-		return [pos[0]-self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE, pos[1]-self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE, pos[2], pos[3]]
+		if len(pos) > 2: # Return a rect if a rect is passed
+			return [pos[0]-self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE, pos[1]-self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE, pos[2], pos[3]]
+
+		return [pos[0]-self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE, pos[1]-self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE]
 
 	def position_to_map_position(self, pos):
 		pos2 = self.position_to_screen_position(pos)
@@ -273,7 +276,13 @@ class Game():
 								organism.shift_energy(organism.get_size()*Constants.EAT_GAIN_MULTIPLIER)
 								self.nutrientmap[pom[0]-1][pom[1]-1] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
 
-						organism.make_decision()
+						organism_map_position = self.position_to_map_position(organism.get_position())
+
+						organism.make_decision([],
+							[self.nutrientmap[organism_map_position[0]][organism_map_position[1]],
+							self.heatmap[organism_map_position[0]][organism_map_position[1]],
+							self.moisturemap[organism_map_position[0]][organism_map_position[1]]])
+						
 						organism.draw(screen, [o*Constants.ENVIRONMENT_ZONE_SIZE for o in self.camera_offset])
 						self.quadtree.insert((organism.get_position()[0], organism.get_position()[1], organism))
 
@@ -339,7 +348,13 @@ class Game():
 
 					for seen_organism in seen_organisms:
 						if organism != seen_organism:
-							organism.make_decision([seen_organism])
+							
+							organism_map_position = self.position_to_map_position(organism.get_position())
+							organism.make_decision([seen_organism],
+								[self.nutrientmap[organism_map_position[0]][organism_map_position[1]],
+								self.heatmap[organism_map_position[0]][organism_map_position[1]],
+								self.moisturemap[organism_map_position[0]][organism_map_position[1]]])
+
 							break
 
 				# UI drawing
@@ -396,6 +411,7 @@ class Game():
 						Text.draw_text(screen_dimensions_without_hud[0]+50+6, 2*n*UI.NODE_DRAW_SIZE+186-5,
 							str(round(self.target_organism.get_hidden_layer()[n], 2)), UI.NODE_TEXT_SIZE, (255, 255, 255))
 
+					# Draw the output layer
 					for n in range(len(self.target_organism.get_outputs())):
 						pygame.draw.circle(screen, UI.NODE_DRAW_COLOUR, (screen_dimensions_without_hud[0]+UI.PADDING+100, 2*n*UI.NODE_DRAW_SIZE+186), UI.NODE_DRAW_SIZE)
 						Text.draw_text(screen_dimensions_without_hud[0]+100+6, 2*n*UI.NODE_DRAW_SIZE+186-5,

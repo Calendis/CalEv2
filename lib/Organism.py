@@ -75,10 +75,10 @@ class Organism():
 		# These are just default values for the sensory_input
 		# Energy, fitness, bias, accel, rotaccel, vel, rotvel, nc size, nc fitness, nc r, nc g, nc b, nc distance, nc species, nc no. of points
 		self.sensory_input = [self.current_energy, self.current_fitness, self.gene_dict["behaviour_bias"], self.acceleration[0], self.rotational_acceleration, self.velocity[0], self.rotational_velocity,
-		1, 1, 1, 1, 1, 1, 1, 1]
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] # Initialise some values to 1
 
 		self.input_names = ["Energy", "Fit", "Bias", "Accel", "RotAccel", "Vel", "RotVel",
-		"NC Size", "NC Fit", "NC R", "NC G", "NC B", "NC Dist", "NC Spec", "NC Nodes"]
+		"NC Size", "NC Fit", "NC R", "NC G", "NC B", "NC Dist", "NC Spec", "NC Nodes", "Tl Nutr", "Tl Temp", "Tl Wet"]
 
 		self.hidden_layer = [None]*Constants.HIDDEN_NODES
 
@@ -170,7 +170,7 @@ class Organism():
 		if self.current_fitness < 0:
 			self.die()
 
-	def make_decision(self, objects_detected=[]):
+	def make_decision(self, objects_detected, occupied_tile_values):
 		# energy, fitness, bias, nc size, nc fitness, nc r, nc g, nc b, nc distance, nc species, nc no. of points
 
 		'''
@@ -196,6 +196,10 @@ class Organism():
 			self.sensory_input[14] = objects_detected[0].gene_dict["point_count"]
 		else:
 			self.object_detected = None
+
+		self.sensory_input[15] = occupied_tile_values[0]
+		self.sensory_input[16] = occupied_tile_values[1]
+		self.sensory_input[17] = occupied_tile_values[2]
 
 		self.outputs = [0]*Constants.OUTPUT_NODES
 
