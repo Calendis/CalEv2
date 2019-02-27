@@ -90,7 +90,7 @@ class Game():
 						Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
 				if self.toggle:
 					Text.draw_text((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
-						str(round(self.nutrientmap[x][y])), UI.TEXT_SIZE, (0, 255, 0), self.map_surface)
+						str(round(self.nutrientmap[x][y])), UI.TEXT_SIZE, (255, 20, 0), self.map_surface)
 
 	def position_to_screen_position(self, pos):
 		if len(pos) > 2: # Return a rect if a rect is passed
@@ -240,7 +240,7 @@ class Game():
 					self.organisms.append(self.generate_random_organism())
 				
 				current_time = time()
-				if current_time - mainscreen_timestamp >= 5:
+				if current_time - mainscreen_timestamp >= 1:
 					# Delete the dead organisms and re-render the map every five seconds
 					# Also give energy to the map so the organisms have an energy source
 					for organism in self.organisms[:]:
