@@ -247,10 +247,10 @@ class Organism():
 	def draw(self, surface, offset):
 		offset_polygon = [(p[0]-offset[0], p[1]-offset[1]) for p in self.polygon]
 		offset_front_point = (self.front_point[0]-offset[0], self.front_point[1]-offset[1])
-		offset_back_point = (self.back_point[0]-offset[0], self.back_point[1]-offset[1])
+		offset_centre_point = (self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1])
 
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), offset_polygon)
-		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), (offset_front_point), (offset_back_point))
+		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), offset_front_point, offset_centre_point)
 		
 		# Draws the organism's centre point (centre of bounding box)
 		#pygame.draw.line(surface, self.gene_dict["inverse_colour"],

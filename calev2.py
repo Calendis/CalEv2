@@ -392,8 +392,8 @@ class Game():
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+8*UI.PADDING,
 						"Mood: "+self.target_organism.get_mood_name())
 
-					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
-						"Bias: "+str(self.target_organism.get_behaviour_bias()))
+					'''Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
+						"Bias: "+str(self.target_organism.get_behaviour_bias()))'''
 
 					# Draw the organism's brain
 					
