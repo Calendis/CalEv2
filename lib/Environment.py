@@ -18,7 +18,7 @@ def generate_noisemap(width, height, intensity=current_preset["intensity"], sea_
 	#map_seed = randint(1,20)*randint(1,1000000) #Perlin noise is not chaotic, so similar seeds will produce similar maps
 	map_seed = randint(-10000, 10000)
 
-	map_size = 7
+	map_size = 3
 	octaves = 8 #Detail level of the map
 
 	#Sets up the heightmap as a nice 2D list
