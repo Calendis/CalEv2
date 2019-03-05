@@ -273,9 +273,9 @@ class Game():
 						# Make the organism eat if in a neutral mood
 						if organism.get_mood_name() == "Neutral":
 							pom = self.position_to_map_position(organism.get_hitbox())
-							if self.nutrientmap[pom[0]-1][pom[1]-1] > 0:
+							if self.nutrientmap[pom[0]][pom[1]] > 0:
 								organism.shift_energy(organism.get_size()*Constants.EAT_GAIN_MULTIPLIER)
-								self.nutrientmap[pom[0]-1][pom[1]-1] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
+								self.nutrientmap[pom[0]][pom[1]] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
 
 						organism_map_position = self.position_to_map_position(organism.get_position())
 
