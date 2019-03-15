@@ -30,7 +30,7 @@ class Organism():
 
 	"""
 			
-	def __init__(self, position, gene_dict, generation, name, idname, starting_energy=False):
+	def __init__(self, position, gene_dict, generation, name, idname, starting_energy=False, initial_polygon=False):
 		super(Organism, self).__init__()
 		self.name = name
 		self.idname = idname
@@ -54,7 +54,7 @@ class Organism():
 
 		self.position = position
 		self.angle = 0 # Rotation, in degrees
-		self.polygon = self.generate_polygon()
+		self.polygon = self.generate_polygon(initial_polygon)
 		self.original_polygon = deepcopy(self.polygon)
 		self.front_point = self.polygon[0]
 		self.back_point = self.polygon[floor(len(self.polygon)/2)+1]
@@ -88,6 +88,10 @@ class Organism():
 		self.mating = False
 		self.reproduction_wait_period = Constants.REPRODUCTION_WAIT_PERIOD
 		self.time_left_before_mating = self.reproduction_wait_period
+
+
+		if self.gene_dict["size"] < 0:
+			print("WARNING: size is", self.gene_dict["size"])
 
 	def update(self):
 		self.velocity[0] += self.acceleration[0]
@@ -145,15 +149,8 @@ class Organism():
 		self.acceleration[0] = 0
 		self.rotational_acceleration = 0
 		self.current_fitness = min([self.current_fitness, self.max_fitness])
-		
-		if self.position[0] < self.gene_dict["size"]:
-			self.position[0] = self.gene_dict["size"]
-		elif self.position[0] > Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
-			self.position[0] = Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
-		if self.position[1] < self.gene_dict["size"]:
-			self.position[1] = self.gene_dict["size"]
-		elif self.position[1] > Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
-			self.position[1] = Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
+
+		self.limit_position()
 		
 		if abs(self.velocity[0]) > self.max_velocity:
 			self.velocity[0] = self.max_velocity*self.max_velocity/self.velocity[0]
@@ -244,6 +241,18 @@ class Organism():
 		self.velocity[0] += magnitude
 		self.velocity[1] *= 0.5
 
+	def limit_position(self):
+		if self.gene_dict["size"] < 1:
+			print("WARNING: Size is ", self.gene_dict["size"])
+		if self.position[0] < self.gene_dict["size"]:
+			self.position[0] = self.gene_dict["size"]
+		elif self.position[0] > Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
+			self.position[0] = Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
+		if self.position[1] < self.gene_dict["size"]:
+			self.position[1] = self.gene_dict["size"]
+		elif self.position[1] > Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
+			self.position[1] = Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
+
 	def draw(self, surface, offset):
 		offset_polygon = [(p[0]-offset[0], p[1]-offset[1]) for p in self.polygon]
 		offset_front_point = (self.front_point[0]-offset[0], self.front_point[1]-offset[1])
@@ -263,13 +272,20 @@ class Organism():
 		#pygame.draw.polygon(surface, (0, 255, 255), self.vision, 1)
 		#pygame.draw.rect(surface, (255, 0, 0), self.vision_hitbox, 1)
 
-	def generate_polygon(self):
+	def generate_polygon(self, initial_polygon):
 		points = []
 
-		for p in range(self.gene_dict["point_count"]):
-			points.append([randint(0, self.gene_dict["size"]), randint(0, self.gene_dict["size"])])
+		if not initial_polygon:
+			for p in range(self.gene_dict["point_count"]):
+				points.append([randint(0, self.gene_dict["size"]), randint(0, self.gene_dict["size"])])
+		else:
+			for p in initial_polygon:
+				points.append([p[0], p[1]])
 
-		t_x = 0
+		for p in range(self.gene_dict["point_count"] - len(points)): # Add new points if the organism happens to have mutated some
+			points.append([randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8, randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8])
+
+		'''t_x = 0
 		t_y = 0
 
 		for p in points:
@@ -277,7 +293,7 @@ class Organism():
 			t_y += p[1]
 
 		t_x /= len(points)
-		t_y /= len(points)
+		t_y /= len(points)'''
 
 		return points
 
@@ -367,6 +383,9 @@ class Organism():
 
 	def get_polygon(self):
 		return self.polygon
+
+	def get_original_polygon(self):
+		return self.original_polygon
 
 	def get_point_count(self):
 		return self.gene_dict["point_count"]

@@ -99,9 +99,21 @@ class Game():
 
 		return [pos[0]-self.camera_offset[0]*Constants.ENVIRONMENT_ZONE_SIZE, pos[1]-self.camera_offset[1]*Constants.ENVIRONMENT_ZONE_SIZE]
 
-	def position_to_map_position(self, pos):
-		pos2 = self.position_to_screen_position(pos)
-		return [floor(pos2[0]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[0], floor(pos2[1]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[1]]
+	def position_to_map_position(self, pos, screenpos=False):
+		pos2 = pos
+		if not screenpos:
+			pos2 = self.position_to_screen_position(pos2)
+		new_x = floor(pos2[0]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[0]
+		new_y = floor(pos2[1]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[1]
+		if new_x < 0 or new_x >= Constants.MAP_WIDTH:
+			print("WARNING: map x is ", new_x)
+			print("given x: ", pos[0])
+			print("map pix x: ", Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE)
+		if new_y < 0 or new_y >= Constants.MAP_HEIGHT:
+			print("WARNING: map y is ", new_y)
+			print("given y: ", pos[1])
+			print("map pix y: ", Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE)
+		return [new_x, new_y]
 
 	def gameloop(self):
 		while not self.done:
@@ -155,6 +167,7 @@ class Game():
 
 										for i in range(Constants.STARTING_POPULATION):
 											self.organisms.append(self.generate_random_organism())
+											self.organisms[-1].limit_position()
 
 										mainscreen_timestamp = time()
 
@@ -177,7 +190,7 @@ class Game():
 						self.done = True
 					if main_event.type == pygame.KEYDOWN:
 						if main_event.key == K_x:
-							self.organisms.append(self.generate_random_organism())
+							pass
 
 						if main_event.key == K_UP:
 							# self.organisms[0].acceleration[0] = -1
@@ -224,6 +237,10 @@ class Game():
 							pass
 					if main_event.type == pygame.MOUSEBUTTONDOWN:
 						if main_event.button == 1:
+							'''mousepom = self.position_to_map_position(pygame.mouse.get_pos(), True)
+							print("mouse pom", mousepom)
+							self.heatmap[mousepom[0]][mousepom[1]] = 1000000'''
+
 							for organism in self.organisms:
 								if pygame.Rect.colliderect(pygame.Rect(self.position_to_screen_position(organism.get_hitbox())),
 									(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)):
@@ -239,6 +256,7 @@ class Game():
 
 				if len(self.organisms) < Constants.POPULATION_MINIMUM:
 					self.organisms.append(self.generate_random_organism())
+					self.organisms[-1].limit_position()
 				
 				current_time = time()
 				if current_time - mainscreen_timestamp >= 1:
@@ -325,22 +343,26 @@ class Game():
 									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
 
 									average_gene_dict = {"colour": tuple([(c1+c2)/2 for c1, c2 in zip(organism.get_colour(), other_organism.get_colour())]),
-									"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()*randint(-1, 1)+0.1),
-									"size": (organism.get_size() + other_organism.get_size())//2 + round(random()*randint(-1, 1)+0.1),
-									"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random() - (1/2))/4,
-									"input_weights": [(iw1+iw2)/2 + (random() - (1/2))/4 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
-									"hidden_weights": [(hw1+hw2)/2 + (random() - (1/2))/4 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
-									"output_weights": [(ow1+ow2)/2 + (random() - (1/2))/4 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
-									# random() - (1/2)/4 is a weight mutation. This value should be studied closely, as it is the "step size" for the neural net
+									"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()-0.3)*randint(-1, 1),
+									"size": (organism.get_size() + other_organism.get_size())//2 + round(random()-0.3)*randint(-1, 1),
+									"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random()*2 - 1) / 8,
+									"input_weights": [(iw1+iw2)/2 + (random()*2 - 1) / 8 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
+									"hidden_weights": [(hw1+hw2)/2 + (random()*2 - 1) / 8 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
+									"output_weights": [(ow1+ow2)/2 + (random()*2 - 1) / 8 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
+									# (random()*2 - 1) / 8 is a weight mutation. This value should be studied closely, as it is the "step size" for the neural net
 
 									average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 
 									average_name = organism.get_name() # There's no such thing as an "average name", so one organism just wins
 									average_id = organism.get_id() # The same situation. Someone's id has to win out
 
-									# Finally, the offspring is created!
-									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id, average_energy_loss))
+									# Pick a polygon at random for the child.
+									average_polygon = [organism.get_original_polygon(), other_organism.get_original_polygon()][randint(0, 1)]
 
+									# Finally, the offspring is created!
+									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id, average_energy_loss, average_polygon))
+									self.organisms[-1].limit_position() # Just in case
+									
 									organism.set_mating(False)
 									other_organism.set_mating(False)
 
