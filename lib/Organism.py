@@ -296,7 +296,7 @@ class Organism():
 		#pygame.draw.rect(surface, (255, 0, 0), self.vision_hitbox, 1)
 
 	def generate_polygon(self, initial_polygon):
-		print("new polygon")
+		#print("new polygon")
 		points = []
 
 		if not initial_polygon:
@@ -314,7 +314,7 @@ class Organism():
 			for j in range(len(points)):
 				if not points[i] is points[j]:
 					while points[i] == points[j]:
-						print("fixing merger")
+						#print("fixing merger")
 						points[j] = [randint(0, self.gene_dict["size"]), randint(0, self.gene_dict["size"])]
 
 		'''t_x = 0
