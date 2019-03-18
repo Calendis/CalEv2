@@ -26,7 +26,7 @@ class Organism():
 
 	The keys needed in the gene dictionary are:
 
-	colour, point_count, size, behaviour_bias, input_weights, hidden_weights, output_weights
+	colour, point_count, size, behaviour_bias, temp_regulator, input_weights, hidden_weights, output_weights
 
 	"""
 			
@@ -69,7 +69,9 @@ class Organism():
 		self.acceleration = [0, 0] # [0] is change in magnitude, [1] is change in angle
 		self.rotational_velocity = 0
 		self.rotational_acceleration = 0
+		
 		self.mood = 0 # Mood is between -1 and 1. -1 is max friendly (reproduction mode) while +1 is max unfriendly (kill mode)
+		self.internal_temp = 0
 
 		self.max_velocity = self.gene_dict["point_count"] / self.gene_dict["size"]
 		self.max_rotational_velocity = 10/self.gene_dict["point_count"]
@@ -95,7 +97,7 @@ class Organism():
 		if self.gene_dict["size"] < 0:
 			print("WARNING: size is", self.gene_dict["size"])
 
-	def update(self):
+	def update(self, current_heat, current_moisture):
 		self.velocity[0] += self.acceleration[0]
 		self.rotational_velocity += self.rotational_acceleration
 
@@ -103,6 +105,11 @@ class Organism():
 		self.position[1] += self.velocity[0]*cos(radians(self.angle))
 		self.old_angle = self.angle
 		self.angle += self.rotational_velocity
+
+		self.internal_temp += current_heat/Constants.ENVIRONMENT_SCALING*self.perimeter
+		self.internal_temp -= self.gene_dict["temp_regulator"]
+		if self.internal_temp < 0:
+			self.internal_temp = 0
 
 		# Rotate all polygon points around centre point
 		for p in self.original_polygon:
@@ -169,6 +176,9 @@ class Organism():
 		self.current_energy -= self.gene_dict["size"] # Being larger should cost more absolute energy
 		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
 		self.current_energy -= abs(self.rotational_acceleration)//3
+		self.current_fitness -= int(self.internal_temp)
+		self.current_energy -= current_heat // Constants.ENVIRONMENT_SCALING
+		#self.current_energy -=
 
 		#self.total_loss = self.gene_dict["point_count"]+self.gene_dict["size"]+abs(self.acceleration[0])//2+abs(self.rotational_acceleration)//3
 		
@@ -297,7 +307,7 @@ class Organism():
 		
 		# Draws the organism's centre point (centre of bounding box)
 		#pygame.draw.line(surface, self.gene_dict["inverse_colour"],
-			#(self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1]), (self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1]))
+			#(self.get_centre_point()dTeV8sX+k,z\~AaFj~{Pl1RndTeV8sX+k,z\~AaFj~{Pl1Rn[0]-offset[0], self.get_centre_point()[1]-offset[1]), (self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1]))
 
 		# Draws the organism's hitbox (bounding) for debug purposes
 		#pygame.draw.rect(surface, (255, 0, 0), self.hitbox, 1)
@@ -451,6 +461,9 @@ class Organism():
 	def get_behaviour_bias(self):
 		return self.gene_dict["behaviour_bias"]
 
+	def get_temp_regulator(self):
+		return self.gene_dict["temp_regulator"]
+
 	def get_input_weights(self):
 		return self.gene_dict["input_weights"]
 
@@ -493,6 +506,9 @@ class Organism():
 
 	def get_thinness(self):
 		return self.thinness
+
+	def get_perimeter(self):
+		return self.perimeter
 
 	def shift_fitness(self, v):
 		self.current_fitness += v

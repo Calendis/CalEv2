@@ -76,6 +76,7 @@ class Game():
 			"point_count": randint(3, 10),
 			"size": randint(10, 32),
 			"behaviour_bias": random()*2-1,
+			"temp_regulator": random()*2-1,
 			"input_weights": [random()*2-1 for i in range(Constants.INPUT_NODES)],
 			"hidden_weights": [random()*2-1 for i in range(Constants.HIDDEN_NODES)],
 			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)]
@@ -92,7 +93,7 @@ class Game():
 						Constants.ENVIRONMENT_ZONE_SIZE, Constants.ENVIRONMENT_ZONE_SIZE))
 				if self.toggle:
 					Text.draw_text((x-self.camera_offset[0])*Constants.ENVIRONMENT_ZONE_SIZE, (y-self.camera_offset[1])*Constants.ENVIRONMENT_ZONE_SIZE,
-						str(round(self.nutrientmap[x][y])), UI.TEXT_SIZE, (255, 20, 0), self.map_surface)
+						str(round(self.heatmap[x][y])), UI.TEXT_SIZE, (255, 90, 0), self.map_surface)
 
 	def position_to_screen_position(self, pos):
 		if len(pos) > 2: # Return a rect if a rect is passed
@@ -286,13 +287,12 @@ class Game():
 				del qt_width, qt_height
 
 				for organism in self.organisms:
-
+					pom = self.position_to_map_position(organism.get_hitbox())
 					if not organism.get_dead():
-						organism.update()
+						organism.update(self.heatmap[pom[0]][pom[1]], self.moisturemap[pom[0]][pom[1]])
 						
 						# Make the organism eat if in a neutral mood
 						if organism.get_mood_name() == "Neutral":
-							pom = self.position_to_map_position(organism.get_hitbox())
 							if self.nutrientmap[pom[0]][pom[1]] > 0:
 								organism.shift_energy(organism.get_size()*Constants.EAT_GAIN_MULTIPLIER)
 								self.nutrientmap[pom[0]][pom[1]] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
@@ -348,6 +348,7 @@ class Game():
 									"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()-0.3)*randint(-1, 1),
 									"size": (organism.get_size() + other_organism.get_size())//2 + round(random()-0.3)*randint(-1, 1),
 									"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random()*2 - 1) / 8,
+									"temp_regulator": (organism.get_temp_regulator() + other_organism.get_temp_regulator())/2 + (random()*2 - 1) / 8,
 									"input_weights": [(iw1+iw2)/2 + (random()*2 - 1) / 8 for iw1, iw2 in zip(organism.get_input_weights(), other_organism.get_input_weights())],
 									"hidden_weights": [(hw1+hw2)/2 + (random()*2 - 1) / 8 for hw1, hw2 in zip(organism.get_hidden_weights(), other_organism.get_hidden_weights())],
 									"output_weights": [(ow1+ow2)/2 + (random()*2 - 1) / 8 for ow1, ow2 in zip(organism.get_input_weights(), other_organism.get_input_weights())]}
@@ -417,7 +418,7 @@ class Game():
 						"Mood: "+self.target_organism.get_mood_name())
 
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
-						"Peri:  "+str(self.target_organism.perimeter))
+						"Peri:  "+str(self.target_organism.get_perimeter()))
 
 					# Draw the organism's brain
 					
