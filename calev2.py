@@ -47,6 +47,7 @@ class Game():
 		self.nutrientmap = []
 		self.moisturemap = []
 		self.heatmap = []
+		self.regenmap = [] # Values on the regenmap correspond to tile regeneration rates on the nutrient map
 
 		self.map_surface = pygame.Surface((screen_dimensions_without_hud[0], screen_dimensions_without_hud[1]))
 		self.camera_offset = [0, 0]
@@ -414,8 +415,8 @@ class Game():
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+8*UI.PADDING,
 						"Mood: "+self.target_organism.get_mood_name())
 
-					'''Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
-						"Bias: "+str(self.target_organism.get_behaviour_bias()))'''
+					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
+						"Thin: "+str(self.target_organism.thinness))
 
 					# Draw the organism's brain
 					

@@ -56,6 +56,7 @@ class Organism():
 		self.angle = 0 # Rotation, in degrees
 		self.polygon = self.generate_polygon(initial_polygon)
 		self.original_polygon = deepcopy(self.polygon)
+		self.thinness = self.generate_thinness()
 		self.front_point = self.polygon[0]
 		self.back_point = self.polygon[floor(len(self.polygon)/2)+1]
 		self.hitbox = self.get_new_hitbox()
@@ -167,8 +168,8 @@ class Organism():
 		self.current_energy -= self.gene_dict["size"] # Being larger should cost more absolute energy
 		self.current_energy -= abs(self.acceleration[0])//2 # Inertia
 		self.current_energy -= abs(self.rotational_acceleration)//3
-		self.current_energy += Constants.PASSIVE_ENERGY_GAIN # Energy loss will be lessened at rest. This is like sleeping
-															 # Hopefully organisms will evolve to "sleep" when energy is low by not moving
+
+		#self.total_loss = self.gene_dict["point_count"]+self.gene_dict["size"]+abs(self.acceleration[0])//2+abs(self.rotational_acceleration)//3
 		
 		if self.current_energy < 0:
 			self.current_fitness += self.current_energy
@@ -253,6 +254,28 @@ class Organism():
 		elif self.position[1] > Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]:
 			self.position[1] = Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE - self.gene_dict["size"]
 
+	def generate_thinness(self):
+		# Finds the distance between the two most distant points in the polygon
+		# Finds the distance between the two second most distant points
+		# Divides the two to get 'thinness'
+		distances = []
+		pairs = []
+		for p in self.original_polygon:
+			for p2 in self.original_polygon:
+				tp = tuple(p)
+				tp2 = tuple(p2)
+				s = set([tp, tp2])
+				if tp != tp2 and s not in pairs:
+					dx = tp[0] - tp2[0]
+					dy = tp[1] - tp2[1]
+					distances.append(sqrt(dx**2 + dy**2))
+					pairs.append(s)
+
+		distances = sorted(distances, reverse=True)
+		thinness = distances[0] - distances[1]
+
+		return thinness
+
 	def draw(self, surface, offset):
 		offset_polygon = [(p[0]-offset[0], p[1]-offset[1]) for p in self.polygon]
 		offset_front_point = (self.front_point[0]-offset[0], self.front_point[1]-offset[1])
@@ -273,6 +296,7 @@ class Organism():
 		#pygame.draw.rect(surface, (255, 0, 0), self.vision_hitbox, 1)
 
 	def generate_polygon(self, initial_polygon):
+		print("new polygon")
 		points = []
 
 		if not initial_polygon:
@@ -284,6 +308,14 @@ class Organism():
 
 		for p in range(self.gene_dict["point_count"] - len(points)): # Add new points if the organism happens to have mutated some
 			points.append([randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8, randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8])
+
+		# This loop fixes merged nodes
+		for i in range(len(points)):
+			for j in range(len(points)):
+				if not points[i] is points[j]:
+					while points[i] == points[j]:
+						print("fixing merger")
+						points[j] = [randint(0, self.gene_dict["size"]), randint(0, self.gene_dict["size"])]
 
 		'''t_x = 0
 		t_y = 0
@@ -448,6 +480,8 @@ class Organism():
 	def get_reproduction_wait_period(self):
 		return self.reproduction_wait_period
 
+	def get_thinness(self):
+		return self.thinness
 
 	def shift_fitness(self, v):
 		self.current_fitness += v
