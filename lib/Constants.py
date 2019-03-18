@@ -19,7 +19,7 @@ ENVIRONMENT_ZONE_SIZE = 60
 # This also provides the max passive energy value for a tile
 ENVIRONMENT_SCALING = 30000
 
-REPLENISH_VALUE = 250
+REPLENISH_DIVISOR = 24 # A higher value means that the nutrient-regen map will have smaller values
 
 QUADTREE_CAPACITY = 2
 

@@ -57,6 +57,7 @@ class Organism():
 		self.polygon = self.generate_polygon(initial_polygon)
 		self.original_polygon = deepcopy(self.polygon)
 		self.thinness = self.generate_thinness()
+		self.perimeter = self.generate_perimeter()
 		self.front_point = self.polygon[0]
 		self.back_point = self.polygon[floor(len(self.polygon)/2)+1]
 		self.hitbox = self.get_new_hitbox()
@@ -275,6 +276,16 @@ class Organism():
 		thinness = distances[0] - distances[1]
 
 		return thinness
+
+	def generate_perimeter(self):
+		running_total_perimeter = 0
+		for i in range(len(self.original_polygon)):
+			dx = self.original_polygon[i-1][0] - self.original_polygon[i][0]
+			dy = self.original_polygon[i-1][1] - self.original_polygon[i][1]
+			distance = sqrt(dx**2 + dy**2)
+			running_total_perimeter += distance
+
+		return running_total_perimeter
 
 	def draw(self, surface, offset):
 		offset_polygon = [(p[0]-offset[0], p[1]-offset[1]) for p in self.polygon]

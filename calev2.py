@@ -151,7 +151,7 @@ class Game():
 										self.nutrientmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
 										self.heatmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
 										self.moisturemap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
-										self.regenmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT, 1/24)
+										self.regenmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT, 1/Constants.REPLENISH_DIVISOR)
 										
 										gen_hmap_end_time = time()
 										print("Done. Took "+str(gen_hmap_end_time - gen_hmap_start_time)+" seconds.")
@@ -272,8 +272,7 @@ class Game():
 					for x in range(Constants.MAP_WIDTH):
 						for y in range(Constants.MAP_HEIGHT):
 							if self.nutrientmap[x][y] < Constants.ENVIRONMENT_SCALING:
-								self.nutrientmap[x][y] += max(0, self.regenmap[x][y])
-								#print(self.regenmap[x][y])
+								self.nutrientmap[x][y] += self.regenmap[x][y]
 
 					self.draw_maps()
 				
@@ -418,7 +417,7 @@ class Game():
 						"Mood: "+self.target_organism.get_mood_name())
 
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
-						"Thin: "+str(self.target_organism.thinness))
+						"Peri:  "+str(self.target_organism.perimeter))
 
 					# Draw the organism's brain
 					
