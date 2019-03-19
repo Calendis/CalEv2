@@ -107,14 +107,15 @@ class Game():
 			pos2 = self.position_to_screen_position(pos2)
 		new_x = floor(pos2[0]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[0]
 		new_y = floor(pos2[1]/Constants.ENVIRONMENT_ZONE_SIZE)+self.camera_offset[1]
-		if new_x < 0 or new_x >= Constants.MAP_WIDTH:
-			print("WARNING: map x is ", new_x)
-			print("given x: ", pos[0])
-			print("map pix x: ", Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE)
-		if new_y < 0 or new_y >= Constants.MAP_HEIGHT:
-			print("WARNING: map y is ", new_y)
-			print("given y: ", pos[1])
-			print("map pix y: ", Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE)
+		if new_x < 0:
+			new_x = 0
+		elif new_x >= Constants.MAP_WIDTH:
+			new_x = Constants.MAP_WIDTH - 1
+		if new_y < 0:
+			new_y = 0
+		elif new_y >= Constants.MAP_HEIGHT:
+			new_y = Constants.MAP_HEIGHT - 1
+		
 		return [new_x, new_y]
 
 	def gameloop(self):
