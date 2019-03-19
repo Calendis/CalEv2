@@ -419,7 +419,7 @@ class Game():
 						"Mood: "+self.target_organism.get_mood_name())
 
 					Text.draw_text(screen_dimensions_without_hud[0]+UI.PADDING, 8+9*UI.PADDING,
-						"Thin:  "+str(self.target_organism.get_thinness()))
+						"Time left: "+str(self.target_organism.get_time_left())+"/"+str(Constants.ORGANISM_LIFESPAN))
 
 					# Draw the organism's brain
 					

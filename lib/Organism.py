@@ -42,6 +42,7 @@ class Organism():
 		self.gene_dict["size"] = max(10, self.gene_dict["size"])
 		self.max_energy = gene_dict["size"]*250
 		self.max_fitness = gene_dict["size"]*25*gene_dict["point_count"] # Give an incentive to evolve more points
+		self.time_left = Constants.ORGANISM_LIFESPAN
 		self.generation = generation
 		
 		if not starting_energy:
@@ -93,10 +94,6 @@ class Organism():
 		self.mating = False
 		self.reproduction_wait_period = Constants.REPRODUCTION_WAIT_PERIOD
 		self.time_left_before_mating = self.reproduction_wait_period
-
-
-		if self.gene_dict["size"] < 0:
-			print("WARNING: size is", self.gene_dict["size"])
 
 	def update(self, current_heat, current_moisture):
 		self.velocity[0] += self.acceleration[0]
@@ -181,6 +178,8 @@ class Organism():
 		self.current_energy -= current_heat // Constants.ENVIRONMENT_SCALING
 		self.current_energy -= (current_moisture // Constants.ENVIRONMENT_SCALING) // self.thinness
 
+		self.time_left -= 1
+
 		#self.total_loss = self.gene_dict["point_count"]+self.gene_dict["size"]+abs(self.acceleration[0])//2+abs(self.rotational_acceleration)//3
 		
 		if self.current_energy < 0:
@@ -191,7 +190,7 @@ class Organism():
 			self.current_fitness += 1
 			self.current_energy = self.max_energy
 		
-		if self.current_fitness < 0:
+		if self.current_fitness < 0 or self.time_left < 0:
 			self.die()
 
 	def make_decision(self, objects_detected, occupied_tile_values):
@@ -511,6 +510,9 @@ class Organism():
 
 	def get_perimeter(self):
 		return self.perimeter
+
+	def get_time_left(self):
+		return self.time_left
 
 	def shift_fitness(self, v):
 		self.current_fitness += v
