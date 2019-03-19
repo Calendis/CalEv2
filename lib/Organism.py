@@ -339,15 +339,7 @@ class Organism():
 						#print("fixing merger")
 						points[j] = [randint(0, self.gene_dict["size"]), randint(0, self.gene_dict["size"])]
 
-		'''t_x = 0
-		t_y = 0
-
-		for p in points:
-			t_x += p[0]
-			t_y += p[1]
-
-		t_x /= len(points)
-		t_y /= len(points)'''
+		self.gene_dict["point_count"] = len(points)
 
 		return points
 
