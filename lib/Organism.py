@@ -77,11 +77,12 @@ class Organism():
 		self.max_rotational_velocity = 10/self.gene_dict["point_count"]
 
 		# These are just default values for the sensory_input
-		# Energy, fitness, bias, accel, rotaccel, vel, rotvel, nc size, nc fitness, nc r, nc g, nc b, nc distance, nc species, nc no. of points
-		self.sensory_input = [self.current_energy, self.current_fitness, self.gene_dict["behaviour_bias"], self.acceleration[0], self.rotational_acceleration, self.velocity[0], self.rotational_velocity,
+		# Energy, fitness, bias, accel, rotaccel, vel, rotvel, internal_temp, nc size, nc fitness, nc r, nc g, nc b, nc distance, nc species, nc no. of points
+		self.sensory_input = [self.current_energy, self.current_fitness, self.gene_dict["behaviour_bias"], self.acceleration[0], self.rotational_acceleration,
+		self.velocity[0], self.rotational_velocity, self.internal_temp,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] # Initialise some values to 1
 
-		self.input_names = ["Energy", "Fit", "Bias", "Accel", "RotAccel", "Vel", "RotVel",
+		self.input_names = ["Energy", "Fit", "Bias", "Accel", "RotAccel", "Vel", "RotVel", "Temp",
 		"NC Size", "NC Fit", "NC R", "NC G", "NC B", "NC Dist", "NC Spec", "NC Nodes", "Tl Nutr", "Tl Temp", "Tl Wet"]
 
 		self.hidden_layer = [None]*Constants.HIDDEN_NODES
@@ -206,23 +207,24 @@ class Organism():
 		self.sensory_input[4] = self.rotational_acceleration
 		self.sensory_input[5] = self.velocity[0]
 		self.sensory_input[6] = self.rotational_velocity
+		self.sensory_input[7] = self.internal_temp
 
 		if len(objects_detected) > 0:
 			self.object_detected = objects_detected[0]
-			self.sensory_input[7] = objects_detected[0].get_size()
-			self.sensory_input[8] = objects_detected[0].get_fitness_ratio()
-			self.sensory_input[9] = objects_detected[0].get_colour()[0]
-			self.sensory_input[10] = objects_detected[0].get_colour()[1]
-			self.sensory_input[11] = objects_detected[0].get_colour()[2]
-			self.sensory_input[12] = sqrt((self.get_position()[0]-objects_detected[0].get_position()[0])**2 + (self.get_position()[1]-objects_detected[0].get_position()[1])**2)
-			self.sensory_input[13] = 1
-			self.sensory_input[14] = objects_detected[0].gene_dict["point_count"]
+			self.sensory_input[8] = objects_detected[0].get_size()
+			self.sensory_input[9] = objects_detected[0].get_fitness_ratio()
+			self.sensory_input[10] = objects_detected[0].get_colour()[0]
+			self.sensory_input[11] = objects_detected[0].get_colour()[1]
+			self.sensory_input[12] = objects_detected[0].get_colour()[2]
+			self.sensory_input[13] = sqrt((self.get_position()[0]-objects_detected[0].get_position()[0])**2 + (self.get_position()[1]-objects_detected[0].get_position()[1])**2)
+			self.sensory_input[14] = 1
+			self.sensory_input[15] = objects_detected[0].gene_dict["point_count"]
 		else:
 			self.object_detected = None
 
-		self.sensory_input[15] = occupied_tile_values[0]
-		self.sensory_input[16] = occupied_tile_values[1]
-		self.sensory_input[17] = occupied_tile_values[2]
+		self.sensory_input[16] = occupied_tile_values[0]
+		self.sensory_input[17] = occupied_tile_values[1]
+		self.sensory_input[18] = occupied_tile_values[2]
 
 		self.outputs = [0]*Constants.OUTPUT_NODES
 

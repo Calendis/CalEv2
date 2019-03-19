@@ -430,7 +430,6 @@ class Game():
 						Text.draw_text(screen_dimensions_without_hud[0]+20, 2*n*UI.NODE_DRAW_SIZE+186-5,
 						 self.target_organism.get_input_names()[n], UI.NODE_TEXT_SIZE, (0, 0, 0))
 
-					
 					# Draw the hidden layer
 					for n in range(len(self.target_organism.get_hidden_layer())):
 						pygame.draw.circle(screen, UI.NODE_DRAW_COLOUR, (screen_dimensions_without_hud[0]+UI.PADDING+50, 2*n*UI.NODE_DRAW_SIZE+186), UI.NODE_DRAW_SIZE)
