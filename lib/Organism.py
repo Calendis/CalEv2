@@ -179,7 +179,7 @@ class Organism():
 		self.current_energy -= abs(self.rotational_acceleration)//3
 		self.current_fitness -= int(self.internal_temp)
 		self.current_energy -= current_heat // Constants.ENVIRONMENT_SCALING
-		#self.current_energy -=
+		self.current_energy -= (current_moisture // Constants.ENVIRONMENT_SCALING) // self.thinness
 
 		#self.total_loss = self.gene_dict["point_count"]+self.gene_dict["size"]+abs(self.acceleration[0])//2+abs(self.rotational_acceleration)//3
 		
@@ -285,7 +285,7 @@ class Organism():
 					pairs.append(s)
 
 		distances = sorted(distances, reverse=True)
-		thinness = distances[0] - distances[1]
+		thinness = distances[0] / distances[1]
 
 		return thinness
 
