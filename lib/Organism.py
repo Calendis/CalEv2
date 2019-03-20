@@ -40,8 +40,8 @@ class Organism():
 		self.gene_dict["inverse_colour"] = (255 - self.gene_dict["colour"][0], 255 - self.gene_dict["colour"][1], 255 - self.gene_dict["colour"][2])
 		self.gene_dict["point_count"] = max(self.gene_dict["point_count"], 3)
 		self.gene_dict["size"] = max(10, self.gene_dict["size"])
-		self.max_energy = gene_dict["size"]*250
-		self.max_fitness = gene_dict["size"]*25*gene_dict["point_count"] # Give an incentive to evolve more points
+		self.max_energy = gene_dict["size"]*Constants.ORGANISM_TOUGHNESS*10
+		self.max_fitness = gene_dict["size"]*Constants.ORGANISM_TOUGHNESS*gene_dict["point_count"] # Give an incentive to evolve more points
 		self.time_left = Constants.ORGANISM_LIFESPAN
 		self.generation = generation
 		
