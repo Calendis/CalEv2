@@ -19,7 +19,7 @@ ENVIRONMENT_ZONE_SIZE = 60
 # Sets the energy per tile. A tile will usually start with about a fifth of this value
 # You could set this lower for a more difficult environment or higher for a more leniant one
 # This also provides the max passive energy value for a tile
-ENVIRONMENT_SCALING = 30000
+ENVIRONMENT_SCALING = 10000
 
 REPLENISH_DIVISOR = 24 # A higher value means that the nutrient-regen map will have smaller values
 
