@@ -341,7 +341,7 @@ class Game():
 								if len(self.organisms) < Constants.POPULATION_LIMIT:
 									organism.shift_energy(-organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
 									other_organism.shift_energy(-other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
-									average_energy_loss = (organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)+(other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
+									average_energy_loss = ((organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)+(other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER))//2
 
 									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
 
