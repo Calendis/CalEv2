@@ -14,6 +14,7 @@ from random import randint
 from random import random
 
 from lib import Constants
+from lib import Name
 
 class Organism():
 	
@@ -30,9 +31,8 @@ class Organism():
 
 	"""
 			
-	def __init__(self, position, gene_dict, generation, name, idname, starting_energy=False, initial_polygon=False):
+	def __init__(self, position, gene_dict, generation, idname, starting_energy=False, initial_polygon=False):
 		super(Organism, self).__init__()
-		self.name = name
 		self.idname = idname
 
 		''' The gene dictionary and the following block control traits of the organism. '''
@@ -94,6 +94,8 @@ class Organism():
 		self.mating = False
 		self.reproduction_wait_period = Constants.REPRODUCTION_WAIT_PERIOD
 		self.time_left_before_mating = self.reproduction_wait_period
+
+		self.name = str(self.idname)+' '+Name.generate_name(self.gene_dict)
 
 	def update(self, current_heat, current_moisture):
 		self.velocity[0] += self.acceleration[0]

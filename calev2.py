@@ -19,7 +19,6 @@ from lib import Button
 from lib import Globals
 from lib import Environment
 from lib import Text
-from lib import Name
 from lib import Constants
 from lib import Quadtree
 
@@ -80,7 +79,7 @@ class Game():
 			"input_weights": [random()*2-1 for i in range(Constants.INPUT_NODES)],
 			"hidden_weights": [random()*2-1 for i in range(Constants.HIDDEN_NODES)],
 			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)]
-			}, 1, Name.generate_name(), self.total_creature_count
+			}, 1, self.total_creature_count
 			)
 
 	def draw_maps(self):
@@ -357,14 +356,13 @@ class Game():
 
 									average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 
-									average_name = organism.get_name() # There's no such thing as an "average name", so one organism just wins
-									average_id = organism.get_id() # The same situation. Someone's id has to win out
+									average_id = min(organism.get_id(), other_organism.get_id()) # Someone's id has to win out. I'll use the lower one
 
 									# Pick a polygon at random for the child.
 									average_polygon = [organism.get_original_polygon(), other_organism.get_original_polygon()][randint(0, 1)]
 
 									# Finally, the offspring is created!
-									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_name, average_id, average_energy_loss, average_polygon))
+									self.organisms.append(Organism.Organism(average_position, average_gene_dict, average_generation, average_id, average_energy_loss, average_polygon))
 									self.organisms[-1].limit_position() # Just in case
 									
 									organism.set_mating(False)
