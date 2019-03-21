@@ -31,8 +31,8 @@ def generate_name(genes):
 	hue = 5*(60*int(hue))%len(syllables)	
 	syllable_indices.append(hue)
 
-	bb = 7*int(atanh(genes["behaviour_bias"]))%len(syllables)
-	syllable_indices.append(bb)
+	#bb = 7*int(atanh(genes["behaviour_bias"]))%len(syllables)
+	#syllable_indices.append(bb)
 
 	name = ""
 	for i in syllable_indices:
