@@ -9,8 +9,8 @@ INPUT_NODES = 19
 HIDDEN_NODES = 11
 OUTPUT_NODES = 3
 
-ORGANISM_LIFESPAN = 7000 # All organisms get an equal share of time, in frames
-ORGANISM_TOUGHNESS = 10
+ORGANISM_LIFESPAN = 10000 # All organisms get an equal share of time, in frames
+ORGANISM_TOUGHNESS = 13
 
 REPRODUCTION_COST_MULTIPLIER = 20
 EAT_GAIN_MULTIPLIER = 2
