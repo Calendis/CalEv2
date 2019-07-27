@@ -27,7 +27,7 @@ class Organism():
 
 	The keys needed in the gene dictionary are:
 
-	colour, point_count, size, behaviour_bias, temp_regulator, input_weights, hidden_weights, output_weights
+	colour, point_count, arm_chances_per_point, size, behaviour_bias, temp_regulator, input_weights, hidden_weights, output_weights
 
 	"""
 			
@@ -38,7 +38,12 @@ class Organism():
 		''' The gene dictionary and the following block control traits of the organism. '''
 		self.gene_dict = gene_dict
 		self.gene_dict["inverse_colour"] = (255 - self.gene_dict["colour"][0], 255 - self.gene_dict["colour"][1], 255 - self.gene_dict["colour"][2])
-		self.gene_dict["point_count"] = max(self.gene_dict["point_count"], 3)
+		'''if starting_energy:
+			print("-------------")
+			print("premod point count: ", self.gene_dict["point_count"])
+		self.gene_dict["point_count"] = max(self.gene_dict["point_count"], 3)'''
+		'''if starting_energy:
+			print("postmod point count: ", self.gene_dict["point_count"])'''
 		self.gene_dict["size"] = max(10, self.gene_dict["size"])
 		self.max_energy = gene_dict["size"]*Constants.ORGANISM_TOUGHNESS*10
 		self.max_fitness = gene_dict["size"]*Constants.ORGANISM_TOUGHNESS*gene_dict["point_count"] # Give an incentive to evolve more points
@@ -55,8 +60,32 @@ class Organism():
 
 		self.position = position
 		self.angle = 0 # Rotation, in degrees
+
+		'''if starting_energy:
+			print("pregen point count: ", self.gene_dict["point_count"])'''
+
 		self.polygon = self.generate_polygon(initial_polygon)
+		
+		'''if starting_energy:
+			print("precopy point count: ", self.gene_dict["point_count"])'''
+
 		self.original_polygon = deepcopy(self.polygon)
+		
+		'''if starting_energy:
+			print("preloop point count: ", self.gene_dict["point_count"])'''
+
+		self.arms = []
+		'''if starting_energy:
+			print(self.get_id())
+			print("point count: ", self.gene_dict["point_count"])
+			print("chances: ", len(self.gene_dict["arm_chances_per_point"]))
+			print("strengths: ", len(self.gene_dict["arm_strength_per_arm"]))'''
+		for i in range(self.gene_dict["point_count"]):
+			'''if starting_energy:
+				print("i: ", i)'''
+			if random() < self.gene_dict["arm_chances_per_point"][i]:
+				self.arms.append(Arm(self.gene_dict["arm_strength_per_arm"][i], i))
+
 		self.thinness = self.generate_thinness()
 		self.perimeter = self.generate_perimeter()
 		self.front_point = self.polygon[0]
@@ -107,7 +136,9 @@ class Organism():
 		self.angle += self.rotational_velocity
 
 		self.internal_temp += current_heat/Constants.ENVIRONMENT_SCALING*self.perimeter
+		#print("temp increased by", current_heat/Constants.ENVIRONMENT_SCALING*self.perimeter)
 		self.internal_temp -= self.gene_dict["temp_regulator"]
+		#print("temp decreased by", self.gene_dict["temp_regulator"])
 		if self.internal_temp < 0:
 			self.internal_temp = 0
 
@@ -174,11 +205,15 @@ class Organism():
 		# This block is for energy consumption
 		self.current_energy -= self.gene_dict["point_count"] # It should take more energy to maintain more points
 		self.current_energy -= self.gene_dict["size"] # Being larger should cost more absolute energy
-		self.current_energy -= abs(self.acceleration[0]) # Inertia
-		self.current_energy -= abs(self.rotational_acceleration)
-		self.current_fitness -= int(self.internal_temp)
-		self.current_energy -= current_heat // Constants.ENVIRONMENT_SCALING
-		self.current_energy -= (current_moisture // Constants.ENVIRONMENT_SCALING) // self.thinness
+		self.current_energy -= abs(self.acceleration[0])//4 # Inertia
+		self.current_energy -= abs(self.rotational_acceleration)//4 # These are divided by 4 because it's less interesting if organisms hate moving
+		self.current_energy -= int(self.internal_temp)
+		for arm in self.arms:
+			self.current_energy -= 1
+			self.current_energy -= int(arm.strength*4)
+		#self.current_fitness -= int(self.internal_temp)
+		#self.current_energy -= current_heat // Constants.ENVIRONMENT_SCALING
+		#self.current_energy -= (current_moisture // Constants.ENVIRONMENT_SCALING) // self.thinness
 
 		self.time_left -= 1
 
@@ -308,6 +343,9 @@ class Organism():
 		pygame.draw.polygon(surface, (self.gene_dict["colour"]), offset_polygon)
 		pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), offset_front_point, offset_centre_point)
 		
+		for arm in self.arms:
+			pygame.draw.line(surface, (self.gene_dict["inverse_colour"]), offset_polygon[arm.place], offset_centre_point, int(arm.strength*4))
+
 		# Draws the organism's centre point (centre of bounding box)
 		#pygame.draw.line(surface, self.gene_dict["inverse_colour"],
 			#(self.get_centre_point()dTeV8sX+k,z\~AaFj~{Pl1RndTeV8sX+k,z\~AaFj~{Pl1Rn[0]-offset[0], self.get_centre_point()[1]-offset[1]), (self.get_centre_point()[0]-offset[0], self.get_centre_point()[1]-offset[1]))
@@ -330,9 +368,17 @@ class Organism():
 			for p in initial_polygon:
 				points.append([p[0], p[1]])
 
-		for p in range(self.gene_dict["point_count"] - len(points)): # Add new points if the organism happens to have mutated some
-			points.append([randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8, randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8])
+		'''if initial_polygon:
+			print("we need ", len(points) - self.gene_dict["point_count"], " more points")
+		for p in range(len(points) - self.gene_dict["point_count"]): # Add new points if the organism happens to have mutated some
+			points.append([randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8, randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8])'''
 
+		while len(points) != self.gene_dict["point_count"]:
+			if len(points) > self.gene_dict["point_count"]:
+				points.pop()
+			else:
+				points.append([randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8, randint(0, self.gene_dict["size"])+(random()*2 - 1) / 8])
+		
 		# This loop fixes merged nodes
 		for i in range(len(points)):
 			for j in range(len(points)):
@@ -508,6 +554,15 @@ class Organism():
 	def get_time_left(self):
 		return self.time_left
 
+	def get_arm_chances(self):
+		return self.gene_dict["arm_chances_per_point"]
+
+	def get_arm_strengths(self):
+		return self.gene_dict["arm_strength_per_arm"]
+
+	def get_arms(self):
+		return self.arms
+
 	def shift_fitness(self, v):
 		self.current_fitness += v
 
@@ -519,3 +574,18 @@ class Organism():
 
 	def set_time_left_before_mating(self, v):
 		self.time_left_before_mating = v
+
+class Arm():
+	""" Appendage organisms use to move """
+	def __init__(self, armstrength, armplace):
+		super(Arm, self).__init__()
+		self.angle = 0 # Angle in degrees
+		self.rotvel = 0 # Angular velocity in degrees/frame
+		self.rotaccel = 0 # Angular acceleration in rotvel/frame
+		
+		self.strength = armstrength
+		self.place = armplace
+
+		if self.strength <= 0:
+			print("WARNING: ARM STRENGTH IS ", self.strength)
+		

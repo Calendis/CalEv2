@@ -6,6 +6,7 @@ syllables = ["os", "en", "an", "dod", "ta", "ar", "cha", "as", "bo", "om", "ca",
 "di", "dys", "ko", "los", "we", "er", "fla", "fol", "fosp", "hil", "hun", "jol", "mar", "ple", "qu", "ray", "ar", "rizz", "spel", "ur",
 "yal", "zan", "zyk", "alc", "um", "is", "ach", "rel", "cen", "eb", "hi", "chu", "ti", "hu", "wu", "eng", "il", "ia", "tok", "num", "e", "ib",
 "us", "um", "ium", "ius", "lia", "mia", "mo", "re", "ol", "na", "io", "zon", "a", "o", "pha", "ge", "rus", "sus", "ai", "kar"]
+syllables.sort()
 
 def generate_name(genes):
 	syllable_indices = []

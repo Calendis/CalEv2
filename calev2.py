@@ -63,6 +63,7 @@ class Game():
 			x = randint(0, Constants.MAP_WIDTH*Constants.ENVIRONMENT_ZONE_SIZE)
 		if not y:
 			y = randint(0, Constants.MAP_HEIGHT*Constants.ENVIRONMENT_ZONE_SIZE)
+		pc = randint(3, 10)
 		return Organism.Organism(
 			[x, # Random x position for organism
 			y], # Random y position for organism
@@ -72,10 +73,12 @@ class Game():
 				randint(0, 255), # Random green value
 				randint(0, 255)  # Random blue value
 				),
-			"point_count": randint(3, 10),
+			"point_count": pc,
+			"arm_chances_per_point": [random() for i in range(pc)],
+			"arm_strength_per_arm": [random()for i in range(pc)],
 			"size": randint(10, 32),
 			"behaviour_bias": random()*2-1,
-			"temp_regulator": random()*2-1,
+			"temp_regulator": random()*4-2,
 			"input_weights": [random()*2-1 for i in range(Constants.INPUT_NODES)],
 			"hidden_weights": [random()*2-1 for i in range(Constants.HIDDEN_NODES)],
 			"output_weights": [random()*2-1 for i in range(Constants.OUTPUT_NODES)]
@@ -150,7 +153,7 @@ class Game():
 										gen_hmap_start_time = time()
 										
 										self.nutrientmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
-										self.heatmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
+										self.heatmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT, Constants.HEATMAP_MULTIPLER) # Less intense heatmap
 										self.moisturemap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT)
 										self.regenmap = Environment.generate_noisemap(Constants.MAP_WIDTH, Constants.MAP_HEIGHT, 1/Constants.REPLENISH_DIVISOR)
 										
@@ -173,6 +176,7 @@ class Game():
 											self.organisms[-1].limit_position()
 
 										mainscreen_timestamp = time()
+										respawn_timestamp = time()
 
 				#Titlescreen logic below
 				screen.fill(UI.BACKGROUND_COLOUR)
@@ -257,13 +261,16 @@ class Game():
 				screen.fill(UI.BACKGROUND_COLOUR)
 				screen.blit(self.map_surface, (0, 0))
 
-				if len(self.organisms) < Constants.POPULATION_MINIMUM:
-					self.organisms.append(self.generate_random_organism())
-					self.organisms[-1].limit_position()
-				
 				current_time = time()
-				if current_time - mainscreen_timestamp >= 1:
-					# Delete the dead organisms and re-render the map every five seconds
+
+				if len(self.organisms) < Constants.POPULATION_MINIMUM and current_time - respawn_timestamp >= Constants.RESPAWN_DELAY:
+					for i in range(Constants.POPULATION_MINIMUM - len(self.organisms)):
+						self.organisms.append(self.generate_random_organism())
+						self.organisms[-1].limit_position()
+						respawn_timestamp = time()
+				
+				if current_time - mainscreen_timestamp >= Constants.MAP_REFRESH_DELAY:
+					# Delete the dead organisms and re-render the map every few seconds
 					# Also give energy to the map so the organisms have an energy source
 					for organism in self.organisms[:]:
 						if organism.get_dead():
@@ -295,7 +302,7 @@ class Game():
 						if organism.get_mood_name() == "Neutral":
 							if self.nutrientmap[pom[0]][pom[1]] > 0:
 								organism.shift_energy(organism.get_size()*Constants.EAT_GAIN_MULTIPLIER)
-								self.nutrientmap[pom[0]][pom[1]] -= organism.get_size()*Constants.EAT_GAIN_MULTIPLIER
+								self.nutrientmap[pom[0]][pom[1]] -= organism.get_size()#*Constants.EAT_GAIN_MULTIPLIER
 
 						organism_map_position = self.position_to_map_position(organism.get_position())
 
@@ -342,10 +349,33 @@ class Game():
 									other_organism.shift_energy(-other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)
 									average_energy_loss = ((organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER)+(other_organism.get_size()*Constants.REPRODUCTION_COST_MULTIPLIER))//2
 
-									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())] 
+									average_position = [(p1+p2)/2 for p1, p2 in zip(organism.get_position(), other_organism.get_position())]
 
+									pc = (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()-0.3)*randint(-1, 1)
+									minpc = min(organism.get_point_count(), other_organism.get_point_count())
+									if pc > minpc:
+										# Need extra arm stats
+										ac = [(organism.get_arm_chances()[i] + other_organism.get_arm_chances()[i])/2 for i in range(minpc)]
+										ac += [random() for i in range(pc - minpc)]
+										
+									else:
+										# We're good
+										ac = [(organism.get_arm_chances()[i] + other_organism.get_arm_chances()[i])/2 for i in range(pc)]
+
+									minaco = min(len(organism.get_arms()), len(other_organism.get_arms()))									
+									astr = [(organism.get_arm_strengths()[i] + other_organism.get_arm_strengths()[i])/2 for i in range(minaco)]
+									if pc > minaco:
+										# Need extra arm strengths
+										astr += [random() for i in range(pc - minaco)]
+
+									'''print("repro point count: ", pc)
+									print("repro chances: ", len(ac))
+									print("repro strengths: ", len(astr))'''
+									
 									average_gene_dict = {"colour": tuple([(c1+c2)/2 for c1, c2 in zip(organism.get_colour(), other_organism.get_colour())]),
-									"point_count": (organism.get_point_count() + other_organism.get_point_count())//2 + round(random()-0.3)*randint(-1, 1),
+									"point_count": pc,
+									"arm_chances_per_point": ac,
+									"arm_strength_per_arm": astr,
 									"size": (organism.get_size() + other_organism.get_size())//2 + round(random()-0.3)*randint(-1, 1),
 									"behaviour_bias": (organism.get_behaviour_bias() + other_organism.get_behaviour_bias())/2 + (random()*2 - 1) / 8,
 									"temp_regulator": (organism.get_temp_regulator() + other_organism.get_temp_regulator())/2 + (random()*2 - 1) / 8,
@@ -357,6 +387,7 @@ class Game():
 									average_generation = max([organism.get_generation(), other_organism.get_generation()])+1
 
 									average_id = min(organism.get_id(), other_organism.get_id()) # Someone's id has to win out. I'll use the lower one
+									#print("repro id: ", average_id)
 
 									# Pick a polygon at random for the child.
 									average_polygon = [organism.get_original_polygon(), other_organism.get_original_polygon()][randint(0, 1)]

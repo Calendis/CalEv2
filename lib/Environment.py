@@ -58,6 +58,6 @@ def generate_noisemap(width, height, intensity=current_preset["intensity"], sea_
 	return heightmap
 
 def get_colour(nmv, hmv, mmv):
-	return (int(min(255, max(hmv/Constants.ENVIRONMENT_SCALING, 0)*255)),
+	return (int(min(255, max(hmv/Constants.ENVIRONMENT_SCALING/Constants.HEATMAP_MULTIPLER, 0)*255)),
 		int(min(255, max(nmv/Constants.ENVIRONMENT_SCALING, 0)*255)),
 		int(min(255, max(mmv/Constants.ENVIRONMENT_SCALING, 0)*255)))
